@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { SchemaRenderService } from './schema-render.service';
-import { PrismaModule } from '../prisma/prisma.module';
+import { SchemaRenderSeedService } from './schema-render.seed.service';
 
 @Module({
-  providers: [SchemaRenderService],
+  providers: [SchemaRenderService, SchemaRenderSeedService],
   exports: [SchemaRenderService]
 })
 export class SchemaRenderModule {}
