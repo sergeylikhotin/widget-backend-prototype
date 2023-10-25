@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// enum ComponentType {
+//   Container
+//   Text
+//   Image
+// }
+
+model Schema {
+  id    Int       @id @default(autoincrement())
+  name  String
+
+  components Component[]
+}
+
+model ComponentSchema {
+  id        Int       @id @default(autoincrement())
+  name      String
+  type      String
+  components Component[]
+}
+
+model Component {
+  id                Int                @id @default(autoincrement())
+
+  schemaId          Int
+  schema            Schema             @relation(fields: [schemaId], references: [id])
+
+  parentId  Int?
+  parent    ContainerComponent? @relation("ParentComponent", fields: [parentId], references: [id])
+
+  componentSchemaId Int
+  componentSchema   ComponentSchema    @relation(fields: [componentSchemaId], references: [id])
+
+  container         ContainerComponent?
+  text              TextComponent?
+  image             ImageComponent? 
+}
+
+model ContainerComponent {
+  id        Int        @id
+  component Component  @relation(fields: [id], references: [id])
+
+  children Component[] @relation("ParentComponent")
+}
+
+model TextComponent {
+  id        Int       @id
+  value     String
+  component Component @relation(fields: [id], references: [id])
+}
+
+model ImageComponent {
+  id        Int       @id
+  url       String
+  component Component @relation(fields: [id], references: [id])
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
