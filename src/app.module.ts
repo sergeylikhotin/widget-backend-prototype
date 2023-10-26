@@ -1,12 +1,23 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { SchemaRenderModule } from './schema-render/schema-render.module';
-import { PrismaModule } from './prisma/prisma.module';
+import { SchemaRenderModule } from './modules/schema-render/schema-render.module';
+import { PrismaModule } from './modules/prisma/prisma.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
+import appConfig from './common/config/app.config';
+import cookieConfig from './common/config/cookie.config';
+import jwtConfig from './common/config/jwt.config';
 
 @Module({
-  imports: [SchemaRenderModule, PrismaModule],
-  controllers: [AppController],
-  providers: [AppService]
+  imports: [
+    ConfigModule.forRoot({
+      load: [appConfig, cookieConfig, jwtConfig],
+      isGlobal: true
+    }),
+    SchemaRenderModule,
+    PrismaModule,
+    AuthModule
+  ],
+  controllers: [],
+  providers: []
 })
 export class AppModule {}
