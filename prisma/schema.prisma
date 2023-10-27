@@ -1,9 +1,76 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// enum ComponentType {
+//   Container
+//   Text
+//   Image
+// }
+
+model Widget {
+  id String @id @default(uuid())
+
+  name String
+
+  schema      Schema?
+  dataSources DataSource[]
+}
+
+// enum DataSourceType {
+//   Tournament
+//   Realtime
+//   Info
+//   Custom
+// }
+
+model DataSource {
+  id String @id @default(uuid())
+
+  name String
+  type String
+
+  widget   Widget? @relation(fields: [widgetId], references: [id])
+  widgetId String?
+
+  tournament TournamentDataSource?
+}
+
+model TournamentDataSource {
+  id         String     @id
+  dataSource DataSource @relation(fields: [id], references: [id])
+
+  tournamentId String
+
+  maincast MaincastTournamentDataSource?
+  dota2    Dota2APITournamentDataSource?
+}
+
+model MaincastTournamentDataSource {
+  id                   String               @id
+  tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
+
+  tournamentId String
+}
+
+model Dota2APITournamentDataSource {
+  id                   String               @id
+  tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
+
+  tournamentId String
+}
 
 model Schema {
   id   Int    @id @default(autoincrement())
   name String
+
+  components Component[]
+
+  widget   Widget @relation(fields: [widgetId], references: [id])
+  widgetId String @unique
+}
+
+model ComponentSchema {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  type String // ComponentType
 
   components Component[]
 }
@@ -11,19 +78,115 @@ model Schema {
 model Component {
   id Int @id @default(autoincrement())
 
-  schema   Schema? @relation(fields: [schemaId], references: [id])
-  schemaId Int?
-
-  name String
-  // props Json?
+  schemaId Int
+  schema   Schema @relation(fields: [schemaId], references: [id])
 
   parentId Int?
-  parent   Component?  @relation("ComponentToComponent", fields: [parentId], references: [id])
-  children Component[] @relation("ComponentToComponent")
+  parent   ContainerComponent? @relation("ComponentInheritance", fields: [parentId], references: [id])
+
+  componentSchemaId Int
+  componentSchema   ComponentSchema @relation(fields: [componentSchemaId], references: [id])
+
+  container ContainerComponent?
+  text      TextComponent?
+  image     ImageComponent?
+
+  dataBinded DataBindedComponent?
+  dataSource DataSourceComponent?
+
+  eventsContainer EventsContainer?
 }
+
+model ContainerComponent {
+  id        Int       @id
+  component Component @relation(fields: [id], references: [id])
+
+  children Component[] @relation("ComponentInheritance")
+}
+
+model TextComponent {
+  id        Int       @id
+  component Component @relation(fields: [id], references: [id])
+
+  value String
+}
+
+model ImageComponent {
+  id        Int       @id
+  component Component @relation(fields: [id], references: [id])
+
+  url String
+}
+
+model DataBindedComponent {
+  id        Int       @id
+  component Component @relation(fields: [id], references: [id])
+
+  // JSON field
+  bindings String
+}
+
+model DataSourceComponent {
+  id        Int       @id
+  component Component @relation(fields: [id], references: [id])
+
+  // Data field path
+  source String
+}
+
+model EventsContainer {
+  id        Int       @id
+  component Component @relation(fields: [id], references: [id])
+
+  events Event[]
+}
+
+model Event {
+  id Int @id
+
+  type    String
+  actions Action[]
+
+  eventsComponentId Int?
+  eventsComponent   EventsContainer? @relation(fields: [eventsComponentId], references: [id])
+}
+
+model Action {
+  id Int @id
+
+  name   String
+  params ActionParam[]
+
+  eventId Int?
+  event   Event? @relation(fields: [eventId], references: [id])
+}
+
+model ActionParam {
+  id Int @id
+
+  name  String
+  type  String // ActionParamType
+  value String
+
+  action   Action? @relation(fields: [actionId], references: [id])
+  actionId Int?
+}
+
+// enum ActionParamType {
+//   String
+//   Number
+//   Boolean
+//   Date
+//
+//   JSON
+// }
 
 generator client {
   provider = "prisma-client-js"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
 }
 
 datasource db {
