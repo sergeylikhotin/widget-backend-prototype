@@ -1,6 +1,6 @@
-import { Prisma, PrismaClient, User } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import { Request } from 'express';
+import { Prisma, PrismaClient, User } from '@prisma/client';
 
 export enum ConfigNames {
   DATABASE = 'database',

@@ -1,5 +1,5 @@
-import { Role, User } from '@prisma/client';
 import { generateHashFromStringSync } from 'src/common/utils/hash';
+import { Role, User } from '@prisma/client';
 
 export const userSeed: User[] = [
   {

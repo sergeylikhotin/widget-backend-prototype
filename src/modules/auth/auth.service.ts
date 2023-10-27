@@ -8,8 +8,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto } from './auth.dto';
 import { ConfigService } from '@nestjs/config';
 import { TokenService } from '../token/token.service';
-import { User } from '@prisma/client';
 import { ConfigNames } from 'src/common/types/shared';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {

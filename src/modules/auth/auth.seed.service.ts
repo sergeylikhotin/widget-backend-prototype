@@ -1,8 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { userSeed } from './auth.data';
-import { User } from '@prisma/client';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { PrismaInterface, SeedInterface } from 'src/common/types/shared';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthSeed implements SeedInterface, OnModuleInit {

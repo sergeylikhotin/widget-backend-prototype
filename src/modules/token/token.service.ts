@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { JwtConfig } from 'src/common/config/jwt.config';
-import { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigNames } from 'src/common/types/shared';
+import { User } from '@prisma/client';
 
 export interface IGeneratedTokens {
   accessToken: string;
