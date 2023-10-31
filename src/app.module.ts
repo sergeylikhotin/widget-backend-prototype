@@ -7,6 +7,7 @@ import { CaslModule } from './modules/casl/casl.module';
 import appConfig from './common/config/app.config';
 import cookieConfig from './common/config/cookie.config';
 import jwtConfig from './common/config/jwt.config';
+import { WidgetModule } from './modules/widget/widget.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import jwtConfig from './common/config/jwt.config';
     SchemaRenderModule,
     PrismaModule,
     AuthModule,
-    CaslModule
+    CaslModule,
+    WidgetModule
   ],
   controllers: [],
   providers: []

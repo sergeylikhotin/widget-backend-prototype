@@ -7,7 +7,7 @@ import {
   Res,
   UseGuards
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthDto } from './auth.dto';
 import { AuthService } from './auth.service';
@@ -15,8 +15,11 @@ import { Roles, RolesGuard } from 'src/common/guards/roles.guard';
 import { AccessTokenGuard } from 'src/common/guards/access.guard';
 import { MessageResponse } from 'src/common/dto';
 import { Role } from '@prisma/client';
-import { CheckPolicies, PoliciesGuard } from 'src/common/guards/policies.guard';
-import { Action, AppAbility } from '../casl/casl-ability.factory';
+import {
+  CaslPolicyHandler,
+  CheckPolicies,
+  PoliciesGuard
+} from 'src/common/guards/policies.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -33,6 +36,17 @@ export class AuthController {
     res.status(HttpStatus.OK).json({ user, accessToken });
   }
 
+  @ApiBody({
+    type: AuthDto,
+    examples: {
+      email: {
+        value: {
+          email: 'example@mail.com',
+          password: 'admin'
+        }
+      }
+    }
+  })
   @Post('login')
   async login(@Body() body: AuthDto, @Res() res: Response) {
     const {
@@ -53,7 +67,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @UseGuards(AccessTokenGuard, PoliciesGuard)
-  @CheckPolicies((ability: AppAbility) => ability.can(Action.Read, 'Component'))
+  @CheckPolicies(new CaslPolicyHandler('manage', 'Widget'))
   @Get('test-policy-guard')
   async test(@Res() res: Response) {
     res.status(HttpStatus.OK).json(new MessageResponse('Success'));

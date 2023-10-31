@@ -8,16 +8,51 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  password String
-  roles    Role[] @default([manager])
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
+  password    String
+  roles       Role[]        @default([manager])
+  widget      Widget[]
+  caslAbility CaslAbility[]
 }
 
 enum Role {
   super_admin
   admin
+  customer
   manager
+  content_manager
+}
+
+model CaslAbility {
+  id           Int                @id @default(autoincrement())
+  role         Role
+  action       CaslAction
+  type         CaslPermissionType
+  modelName    CaslModels
+  sharedWith   User?              @relation(fields: [sharedWithId], references: [id])
+  sharedWithId Int?
+  resourceId   Int?
+}
+
+enum CaslPermissionType {
+  can
+  cannot
+}
+
+enum CaslAction {
+  read
+  create
+  update
+  delete
+  manage
+}
+
+model Widget {
+  id       Int    @id @default(autoincrement())
+  name     String
+  author   User?  @relation(fields: [authorId], references: [id])
+  authorId Int
 }
 
 model Schema {
@@ -38,4 +73,12 @@ model Component {
   parentId Int?
   parent   Component?  @relation("ComponentToComponent", fields: [parentId], references: [id])
   children Component[] @relation("ComponentToComponent")
+}
+
+enum CaslModels {
+  all
+  User
+  Widget
+  Schema
+  Component
 }

@@ -5,21 +5,38 @@ import {
   SetMetadata
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { CaslAction } from '@prisma/client';
 import {
   AppAbility,
+  AppSubjects,
   CaslAbilityFactory
 } from 'src/modules/casl/casl-ability.factory';
 
 interface IPolicyHandler {
   handle(ability: AppAbility): boolean;
 }
-
 type PolicyHandlerCallback = (ability: AppAbility) => boolean;
-
 export type PolicyHandler = IPolicyHandler | PolicyHandlerCallback;
+
 export const CHECK_POLICIES_KEY = 'check_policy';
 export const CheckPolicies = (...handlers: PolicyHandler[]) =>
   SetMetadata(CHECK_POLICIES_KEY, handlers);
+
+export class CaslPolicyHandler implements IPolicyHandler {
+  action: CaslAction;
+  subject: AppSubjects;
+  field?: string;
+
+  constructor(action: CaslAction, subject: AppSubjects, field?: string) {
+    this.action = action;
+    this.subject = subject;
+    this.field = field;
+  }
+
+  handle(ability: AppAbility) {
+    return ability.can(this.action, this.subject);
+  }
+}
 
 @Injectable()
 export class PoliciesGuard implements CanActivate {
@@ -36,7 +53,7 @@ export class PoliciesGuard implements CanActivate {
       ) || [];
 
     const { user } = context.switchToHttp().getRequest();
-    const ability = this.caslAbilityFactory.createForUser(user);
+    const ability = await this.caslAbilityFactory.createForUser(user);
 
     return policyHandlers.every((handler) =>
       this.execPolicyHandler(handler, ability)

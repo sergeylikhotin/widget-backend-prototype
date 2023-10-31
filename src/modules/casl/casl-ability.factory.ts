@@ -1,15 +1,16 @@
-import { Component, User, Schema, Role } from '@prisma/client';
+import {
+  Component,
+  User,
+  Schema,
+  Widget,
+  CaslAction,
+  CaslAbility,
+  CaslModels
+} from '@prisma/client';
 import { AbilityBuilder, ExtractSubjectType, PureAbility } from '@casl/ability';
 import { PrismaQuery, Subjects, createPrismaAbility } from '@casl/prisma';
-import { Injectable } from '@nestjs/common';
-
-export enum Action {
-  Manage = 'manage',
-  Create = 'create',
-  Read = 'read',
-  Update = 'update',
-  Delete = 'delete'
-}
+import { Injectable, Scope } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
 export type AppSubjects =
   | 'all'
@@ -17,26 +18,45 @@ export type AppSubjects =
       User: User;
       Component: Component;
       Schema: Schema;
+      Widget: Widget;
     }>;
 
-export type AppAbility = PureAbility<[Action, AppSubjects], PrismaQuery>;
+export type AppAbility = PureAbility<[CaslAction, AppSubjects], PrismaQuery>;
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class CaslAbilityFactory {
-  createForUser(user: User) {
-    const { can, cannot, build } = new AbilityBuilder<AppAbility>(
-      createPrismaAbility
+  private readonly caslAbilityBuilder = new AbilityBuilder<AppAbility>(
+    createPrismaAbility
+  );
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createForUser(user: User) {
+    await Promise.all(
+      user.roles.map(async (role) => {
+        const abilities = await this.prisma.caslAbility.findMany({
+          where: { role }
+        });
+
+        abilities.forEach((value) => this.createAbility(value, user));
+      })
     );
 
-    if (user.roles.includes(Role.super_admin)) {
-      // can(Action.Manage, 'all'); // read-write access to everything
-      cannot(Action.Read, 'Component');
-    }
-
-    return build({
-      // Read https://casl.js.org/v6/en/guide/subject-type-detection#use-classes-as-subject-types for details
+    return this.caslAbilityBuilder.build({
       detectSubjectType: (item) =>
         item.constructor as unknown as ExtractSubjectType<AppSubjects>
     });
+  }
+
+  private createAbility(
+    { type, action, modelName, sharedWithId, resourceId }: CaslAbility,
+    user: User
+  ) {
+    if (user?.id && sharedWithId === user?.id) {
+      this.caslAbilityBuilder[type](action, modelName as CaslModels, {
+        id: resourceId
+      });
+    } else if (!sharedWithId && !resourceId) {
+      this.caslAbilityBuilder[type](action, modelName as CaslModels);
+    }
   }
 }
