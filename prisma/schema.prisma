@@ -1,9 +1,3 @@
-// enum ComponentType {
-//   Container
-//   Text
-//   Image
-// }
-
 model Widget {
   id String @id @default(uuid())
 
@@ -13,18 +7,17 @@ model Widget {
   dataSources DataSource[]
 }
 
-// enum DataSourceType {
-//   Tournament
-//   Realtime
-//   Info
-//   Custom
-// }
+enum DataSourceType {
+  Tournament
+  Realtime
+  Info
+}
 
 model DataSource {
   id String @id @default(uuid())
 
   name String
-  type String
+  type DataSourceType
 
   widget   Widget? @relation(fields: [widgetId], references: [id])
   widgetId String?
@@ -57,7 +50,7 @@ model Dota2APITournamentDataSource {
 }
 
 model Schema {
-  id   Int    @id @default(autoincrement())
+  id   String @id @default(uuid())
   name String
 
   components Component[]
@@ -66,68 +59,70 @@ model Schema {
   widgetId String @unique
 }
 
+enum ComponentType {
+  Root
+  Base
+
+  Text
+  Image
+}
+
 model ComponentSchema {
-  id   Int    @id @default(autoincrement())
+  id   String @id @default(uuid())
   name String
 
-  type String // ComponentType
+  type ComponentType
 
   components Component[]
 }
 
 model Component {
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
 
-  schemaId Int
+  schemaId String
   schema   Schema @relation(fields: [schemaId], references: [id])
 
-  parentId Int?
-  parent   ContainerComponent? @relation("ComponentInheritance", fields: [parentId], references: [id])
+  parentId String?
+  parent   Component? @relation("ComponentInheritance", fields: [parentId], references: [id])
 
-  componentSchemaId Int
+  componentSchemaId String
   componentSchema   ComponentSchema @relation(fields: [componentSchemaId], references: [id])
 
-  container ContainerComponent?
-  text      TextComponent?
-  image     ImageComponent?
+  text  TextComponent?
+  image ImageComponent?
 
   dataBinded DataBindedComponent?
   dataSource DataSourceComponent?
 
   eventsContainer EventsContainer?
-}
-
-model ContainerComponent {
-  id        Int       @id
-  component Component @relation(fields: [id], references: [id])
 
   children Component[] @relation("ComponentInheritance")
 }
 
 model TextComponent {
-  id        Int       @id
+  id        String    @id
   component Component @relation(fields: [id], references: [id])
 
   value String
 }
 
 model ImageComponent {
-  id        Int       @id
+  id        String    @id
   component Component @relation(fields: [id], references: [id])
 
   url String
 }
 
 model DataBindedComponent {
-  id        Int       @id
+  id        String    @id
   component Component @relation(fields: [id], references: [id])
 
   // JSON field
-  bindings String
+  bindings Json
 }
 
 model DataSourceComponent {
-  id        Int       @id
+  id        String    @id
   component Component @relation(fields: [id], references: [id])
 
   // Data field path
@@ -135,61 +130,57 @@ model DataSourceComponent {
 }
 
 model EventsContainer {
-  id        Int       @id
+  id        String    @id
   component Component @relation(fields: [id], references: [id])
 
   events Event[]
 }
 
 model Event {
-  id Int @id
+  id String @id @default(uuid())
 
   type    String
   actions Action[]
 
-  eventsComponentId Int?
+  eventsComponentId String?
   eventsComponent   EventsContainer? @relation(fields: [eventsComponentId], references: [id])
 }
 
 model Action {
-  id Int @id
+  id String @id @default(uuid())
 
   name   String
   params ActionParam[]
 
-  eventId Int?
-  event   Event? @relation(fields: [eventId], references: [id])
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id])
 }
 
 model ActionParam {
-  id Int @id
+  id String @id @default(uuid())
 
   name  String
-  type  String // ActionParamType
+  type  ActionParamType
   value String
 
+  actionId String?
   action   Action? @relation(fields: [actionId], references: [id])
-  actionId Int?
 }
 
-// enum ActionParamType {
-//   String
-//   Number
-//   Boolean
-//   Date
-//
-//   JSON
-// }
+enum ActionParamType {
+  String
+  Number
+  Boolean
+  Date
+
+  JSON
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-generator dbml {
-  provider = "prisma-dbml-generator"
-}
-
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
