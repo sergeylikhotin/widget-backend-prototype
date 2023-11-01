@@ -3,51 +3,51 @@ model Widget {
 
   name String
 
-  schema      Schema?
-  dataSources DataSource[]
+  schema Schema?
+  // dataSources DataSource[]
 }
 
-enum DataSourceType {
-  Tournament
-  Realtime
-  Info
-}
-
-model DataSource {
-  id String @id @default(uuid())
-
-  name String
-  type DataSourceType
-
-  widget   Widget? @relation(fields: [widgetId], references: [id])
-  widgetId String?
-
-  tournament TournamentDataSource?
-}
-
-model TournamentDataSource {
-  id         String     @id
-  dataSource DataSource @relation(fields: [id], references: [id])
-
-  tournamentId String
-
-  maincast MaincastTournamentDataSource?
-  dota2    Dota2APITournamentDataSource?
-}
-
-model MaincastTournamentDataSource {
-  id                   String               @id
-  tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
-
-  tournamentId String
-}
-
-model Dota2APITournamentDataSource {
-  id                   String               @id
-  tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
-
-  tournamentId String
-}
+// enum DataSourceType {
+//   Tournament
+//   Realtime
+//   Info
+// }
+//
+// model DataSource {
+//   id String @id @default(uuid())
+//
+//   name String
+//   type DataSourceType
+//
+//   widget   Widget? @relation(fields: [widgetId], references: [id])
+//   widgetId String?
+//
+//   tournament TournamentDataSource?
+// }
+//
+// model TournamentDataSource {
+//   id         String     @id
+//   dataSource DataSource @relation(fields: [id], references: [id])
+//
+//   tournamentId String
+//
+//   maincast MaincastTournamentDataSource?
+//   dota2    Dota2APITournamentDataSource?
+// }
+//
+// model MaincastTournamentDataSource {
+//   id                   String               @id
+//   tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
+//
+//   tournamentId String
+// }
+//
+// model Dota2APITournamentDataSource {
+//   id                   String               @id
+//   tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
+//
+//   tournamentId String
+// }
 
 model Schema {
   id   String @id @default(uuid())
@@ -62,6 +62,8 @@ model Schema {
 enum ComponentType {
   Root
   Base
+
+  DataSource
 
   Text
   Image
