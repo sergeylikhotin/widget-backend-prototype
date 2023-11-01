@@ -8,18 +8,22 @@ import appConfig from './common/config/app.config';
 import cookieConfig from './common/config/cookie.config';
 import jwtConfig from './common/config/jwt.config';
 import { WidgetModule } from './modules/widget/widget.module';
+import { EmailModule } from './modules/email/email.module';
+import emailConfig from './common/config/email.config';
+import clientConfig from './common/config/client.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [appConfig, cookieConfig, jwtConfig],
+      load: [appConfig, cookieConfig, jwtConfig, emailConfig, clientConfig],
       isGlobal: true
     }),
     SchemaRenderModule,
     PrismaModule,
     AuthModule,
     CaslModule,
-    WidgetModule
+    WidgetModule,
+    EmailModule
   ],
   controllers: [],
   providers: []

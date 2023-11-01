@@ -7,7 +7,8 @@ export enum ConfigNames {
   APP = 'app',
   EMAIL = 'email',
   JWT = 'jwt',
-  COOKIES = 'cookies'
+  COOKIES = 'cookies',
+  CLIENT_APP = 'client_app'
 }
 
 export type GuardedRequest = Request & { user: User };

@@ -3,13 +3,23 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
+  Query,
   Res,
-  UseGuards
+  UseGuards,
+  UsePipes,
+  ValidationPipe
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import { AuthDto } from './auth.dto';
+import {
+  AuthDto,
+  EmailByCodeDto,
+  EmailDto,
+  GenerateRegisterLinkDto
+} from './auth.dto';
 import { AuthService } from './auth.service';
 import { Roles, RolesGuard } from 'src/common/guards/roles.guard';
 import { AccessTokenGuard } from 'src/common/guards/access.guard';
@@ -20,21 +30,16 @@ import {
   CheckPolicies,
   PoliciesGuard
 } from 'src/common/guards/policies.guard';
+import { EmailService } from '../email/email.service';
+import { getRegisterLinkHtml } from '../email/email.html';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly _authService: AuthService) {}
-
-  @Post('register')
-  async register(@Body() body: AuthDto, @Res() res: Response) {
-    const {
-      user,
-      tokens: { accessToken }
-    } = await this._authService.register(body);
-
-    res.status(HttpStatus.OK).json({ user, accessToken });
-  }
+  constructor(
+    private readonly authService: AuthService,
+    private readonly emailService: EmailService
+  ) {}
 
   @ApiBody({
     type: AuthDto,
@@ -52,7 +57,21 @@ export class AuthController {
     const {
       user,
       tokens: { accessToken }
-    } = await this._authService.login(body);
+    } = await this.authService.login(body);
+
+    res.status(HttpStatus.OK).json({ user, accessToken });
+  }
+
+  @Post('register')
+  async register(
+    @Body() body: AuthDto,
+    @Query('code') code: string,
+    @Res() res: Response
+  ) {
+    const {
+      user,
+      tokens: { accessToken }
+    } = await this.authService.register(body, code);
 
     res.status(HttpStatus.OK).json({ user, accessToken });
   }
@@ -71,5 +90,28 @@ export class AuthController {
   @Get('test-policy-guard')
   async test(@Res() res: Response) {
     res.status(HttpStatus.OK).json(new MessageResponse('Success'));
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.super_admin)
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Post('register/send-link')
+  async createUserByEmail(
+    @Res() res: Response,
+    @Body() body: GenerateRegisterLinkDto
+  ) {
+    const link = await this.authService.generateRegisterLink(body);
+    const title = 'Register link!';
+
+    await this.emailService.send(body.email, title, getRegisterLinkHtml(link));
+
+    res.status(HttpStatus.OK).json(new MessageResponse('Success'));
+  }
+
+  @Get('email-by-code')
+  async getEmailByCode(@Res() res: Response, @Query('code') code: string) {
+    const email = await this.authService.getEmailByCode(code);
+
+    res.status(HttpStatus.OK).json(email);
   }
 }

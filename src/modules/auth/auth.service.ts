@@ -5,40 +5,74 @@ import {
   generateHashFromString
 } from 'src/common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthDto } from './auth.dto';
+import { AuthDto, GenerateRegisterLinkDto } from './auth.dto';
 import { ConfigService } from '@nestjs/config';
 import { TokenService } from '../token/token.service';
 import { ConfigNames } from 'src/common/types/shared';
 import { User } from '@prisma/client';
+import { ClientAppConfig } from 'src/common/config/client.config';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
-  private readonly _appConfig: AppConfig;
+  private readonly appConfig: AppConfig;
+  private readonly clientAppConfig: ClientAppConfig;
   constructor(
     private readonly _prisma: PrismaService,
-    private readonly _configService: ConfigService,
+    private readonly configService: ConfigService,
     private readonly _tokensService: TokenService
   ) {
-    const config = this._configService.getOrThrow<AppConfig>(ConfigNames.APP);
-    this._appConfig = config;
+    const appConfig = this.configService.getOrThrow<AppConfig>(ConfigNames.APP);
+    const clientAppConfig = this.configService.getOrThrow<ClientAppConfig>(
+      ConfigNames.CLIENT_APP
+    );
+
+    this.clientAppConfig = clientAppConfig;
+    this.appConfig = appConfig;
   }
 
-  async register({ email, password }: AuthDto) {
-    const isExistUser = await this._prisma.user.findUnique({
+  async generateRegisterLink({ email, roles }: GenerateRegisterLinkDto) {
+    const activationCode = uuidv4();
+
+    await this._prisma.user.upsert({
+      where: { email },
+      update: { roles, activationCode },
+      create: { roles, activationCode, email }
+    });
+
+    const link = this.redirectRegisterUrl(activationCode);
+    return link;
+  }
+
+  async register({ email, password }: AuthDto, code: string) {
+    const isExistEmail = await this._prisma.user.findUnique({
       where: { email }
     });
 
-    if (isExistUser) {
-      throw new BadRequestException('Email already in use.');
+    if (!isExistEmail) {
+      throw new BadRequestException('Email doesn`t exist or user registered!');
+    }
+
+    if (!isExistEmail.password) {
+      throw new BadRequestException('User already registered!');
+    }
+
+    const isExistCode = await this._prisma.user.findUnique({
+      where: { email, activationCode: code }
+    });
+
+    if (!isExistCode) {
+      throw new BadRequestException('Activation code doesn`t exist!');
     }
 
     const hashedPassword = await generateHashFromString(
       password,
-      this._appConfig.bcryptSalt
+      this.appConfig.bcryptSalt
     );
 
-    const createdUser = await this._prisma.user.create({
-      data: { email, password: hashedPassword }
+    const createdUser = await this._prisma.user.update({
+      where: { email },
+      data: { password: hashedPassword, activationCode: null }
     });
 
     const tokens = this._tokensService.generateTokens(createdUser);
@@ -53,14 +87,15 @@ export class AuthService {
     const candidate = await this._prisma.user.findUnique({
       where: { email }
     });
+
     if (!candidate) {
-      throw new BadRequestException('Invalid email');
+      throw new BadRequestException('Invalid doesn`t exist!');
     }
 
     const isValid = await compareStringWithHash(password, candidate.password);
 
     if (!isValid) {
-      throw new BadRequestException('Invalid password');
+      throw new BadRequestException('Invalid password!');
     }
 
     const tokens = this._tokensService.generateTokens(candidate);
@@ -75,5 +110,21 @@ export class AuthService {
     const tokens = this._tokensService.generateTokens(user);
 
     return { tokens };
+  }
+
+  async getEmailByCode(code: string) {
+    const candidate = await this._prisma.user.findUnique({
+      where: { activationCode: code }
+    });
+
+    if (!candidate) {
+      throw new BadRequestException("Activation code doesn't exist!");
+    }
+
+    return candidate.email;
+  }
+
+  private redirectRegisterUrl(code: string) {
+    return `${this.clientAppConfig.client_app_register_url}/${code}`;
   }
 }

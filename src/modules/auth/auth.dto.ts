@@ -1,13 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MaxLength } from 'class-validator';
+import { $Enums } from '@prisma/client';
+import { IsArray, IsEmail, IsEnum, IsString, MaxLength } from 'class-validator';
 
-export class AuthDto {
+export class EmailDto {
   @IsEmail()
+  @IsString()
   @ApiProperty()
   email: string;
-
+}
+export class AuthDto extends EmailDto {
   @IsString()
   @MaxLength(16)
   @ApiProperty()
   password: string;
+}
+
+export class GenerateRegisterLinkDto extends EmailDto {
+  @IsArray()
+  @IsEnum($Enums.Role, { each: true })
+  @ApiProperty()
+  roles: $Enums.Role[];
+}
+
+export class EmailByCodeDto {
+  @IsString()
+  @ApiProperty()
+  activationCode: string;
 }
