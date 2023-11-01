@@ -12,20 +12,20 @@ import {
   ValidationPipe
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
-import { AuthDto, GenerateRegisterLinkDto } from './auth.dto';
-import { AuthService } from './auth.service';
-import { Roles, RolesGuard } from 'src/common/guards/roles.guard';
-import { AccessTokenGuard } from 'src/common/guards/access.guard';
-import { MessageResponse } from 'src/common/dto';
 import { Role } from '@prisma/client';
+import { Response } from 'express';
+import { MessageResponse } from 'src/common/dto';
+import { AccessTokenGuard } from 'src/common/guards/access.guard';
 import {
   CaslPolicyHandler,
   CheckPolicies,
   PoliciesGuard
 } from 'src/common/guards/policies.guard';
-import { EmailService } from '../email/email.service';
+import { Roles, RolesGuard } from 'src/common/guards/roles.guard';
 import { getRegisterLinkHtml } from '../email/email.html';
+import { EmailService } from '../email/email.service';
+import { AuthDto, EmailDto, UserAccountWithoutPasswordDto } from './auth.dto';
+import { AuthService } from './auth.service';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -91,17 +91,29 @@ export class AuthController {
   @Roles(Role.super_admin)
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Post('register/send-link')
-  async createUserByEmail(
+  async sendEmailWithLink(
     @Res() res: Response,
-    @Body() body: GenerateRegisterLinkDto,
+    @Body() body: EmailDto,
     @Query('expire-time-hours', ParseIntPipe)
     expireTime?: number
   ) {
-    const link = await this.authService.generateRegisterLink(body, expireTime);
+    const link = await this.authService.sendEmailWithLink(body, expireTime);
     const title = 'Register link!';
 
     await this.emailService.send(body.email, title, getRegisterLinkHtml(link));
 
+    res.status(HttpStatus.OK).json(new MessageResponse('Success'));
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.super_admin)
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Post('register/user-account')
+  async createUserAccountWithoutPassword(
+    @Res() res: Response,
+    @Body() body: UserAccountWithoutPasswordDto
+  ) {
+    await this.authService.createUserAccountWithoutPassword(body);
     res.status(HttpStatus.OK).json(new MessageResponse('Success'));
   }
 

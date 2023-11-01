@@ -5,7 +5,7 @@ import {
   generateHashFromString
 } from 'src/common/utils/hash';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthDto, GenerateRegisterLinkDto } from './auth.dto';
+import { AuthDto, EmailDto, UserAccountWithoutPasswordDto } from './auth.dto';
 import { ConfigService } from '@nestjs/config';
 import { TokenService } from '../token/token.service';
 import { ConfigNames } from 'src/common/types/shared';
@@ -31,10 +31,19 @@ export class AuthService {
     this.appConfig = appConfig;
   }
 
-  async generateRegisterLink(
-    { email, roles }: GenerateRegisterLinkDto,
-    expireTime?: number
-  ) {
+  async sendEmailWithLink({ email }: EmailDto, expireTime?: number) {
+    const isExistEmail = await this._prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!isExistEmail) {
+      throw new BadRequestException('Email doesn`t exist!');
+    }
+
+    if (isExistEmail.password) {
+      throw new BadRequestException('User already registered!');
+    }
+
     const activationCode = uuidv4();
     const expirationTime = new Date();
     const inOneHour = 1;
@@ -43,23 +52,32 @@ export class AuthService {
       expirationTime.getHours() + expireTime ?? inOneHour
     );
 
-    await this._prisma.user.upsert({
+    await this._prisma.user.update({
       where: { email },
-      update: {
-        roles,
+      data: {
         activationCode,
-        activationCodeExpiration: expirationTime
-      },
-      create: {
-        roles,
-        activationCode,
-        email,
         activationCodeExpiration: expirationTime
       }
     });
 
     const link = this.redirectRegisterUrl(activationCode);
     return link;
+  }
+
+  async createUserAccountWithoutPassword({
+    email,
+    roles
+  }: UserAccountWithoutPasswordDto) {
+    await this._prisma.user.upsert({
+      where: { email },
+      update: {
+        roles
+      },
+      create: {
+        roles,
+        email
+      }
+    });
   }
 
   async register({ email, password }: AuthDto, code: string) {

@@ -15,15 +15,15 @@ export class AuthDto extends EmailDto {
   password: string;
 }
 
-export class GenerateRegisterLinkDto extends EmailDto {
-  @IsArray()
-  @IsEnum($Enums.Role, { each: true })
-  @ApiProperty()
-  roles: $Enums.Role[];
-}
-
 export class EmailByCodeDto {
   @IsString()
   @ApiProperty()
   activationCode: string;
+}
+
+export class UserAccountWithoutPasswordDto extends EmailDto {
+  @IsArray()
+  @IsEnum($Enums.Role, { each: true })
+  @ApiProperty()
+  roles: $Enums.Role[];
 }

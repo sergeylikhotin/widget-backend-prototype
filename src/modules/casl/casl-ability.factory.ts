@@ -18,6 +18,7 @@ export type AppSubjects =
       Component: Component;
       Schema: Schema;
       Widget: Widget;
+      CaslAbility: CaslAbility;
     }>;
 
 export type AppAbility = PureAbility<[CaslAction, AppSubjects], PrismaQuery>;
