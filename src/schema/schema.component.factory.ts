@@ -7,6 +7,10 @@ export interface ComponentModel {
   name: string;
 
   props?: Record<string, any>;
+
+  source?: string;
+  bindings?: Record<string, any>;
+
   children?: ComponentModel[];
 }
 export type ComponentBuilder = (comp: ComponentFull) => ComponentModel;
@@ -17,6 +21,12 @@ export class SchemaComponentFactory {
       [ComponentType.Base]: (comp: ComponentFull) => this.getModel(comp),
       [ComponentType.Root]: (comp: ComponentFull) => this.getModel(comp),
 
+      [ComponentType.DataSource]: (comp: ComponentFull) => ({
+        ...this.getModel(comp),
+
+        source: comp.dataSource.source
+      }),
+
       [ComponentType.Text]: (comp: ComponentFull) =>
         this.getModel(comp, { value: comp?.text?.value }),
       [ComponentType.Image]: (comp: ComponentFull) =>
@@ -26,12 +36,22 @@ export class SchemaComponentFactory {
   private getModel = (
     component: ComponentFull,
     props?: Record<string, any>
-  ): ComponentModel => ({
-    id: component.id,
-    name: component.componentSchema.name,
+  ): ComponentModel => {
+    let model: ComponentModel = {
+      id: component.id,
+      name: component.componentSchema.name,
 
-    props
-  });
+      props
+    };
+    if (component.dataBinded) {
+      model = {
+        ...model,
+        bindings: component.dataBinded.bindings as Record<string, any>
+      };
+    }
+
+    return model;
+  };
 
   create(component: ComponentFull): ComponentModel {
     const componentSchemaType = component.componentSchema.type;

@@ -9,9 +9,12 @@ export class SchemaSeedService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
-    const widget = await this.prisma.widget.findUnique({
-      where: widgetSeedData
-    });
+    let widget = await this.prisma.widget.findFirst();
+    if (widget == null) {
+      widget = await this.prisma.widget.create({
+        data: widgetSeedData
+      });
+    }
     let schema = await this.prisma.schema.findUnique({
       where: schemaSeedData
     });
@@ -42,6 +45,20 @@ export class SchemaSeedService implements OnModuleInit {
         data: {
           name: 'Container',
           type: ComponentType.Base
+        }
+      });
+    }
+
+    let dataSourceComponentSchema = await this.prisma.componentSchema.findFirst(
+      {
+        where: { name: 'DataSource' }
+      }
+    );
+    if (dataSourceComponentSchema == null) {
+      dataSourceComponentSchema = await this.prisma.componentSchema.create({
+        data: {
+          name: 'DataSource',
+          type: ComponentType.DataSource
         }
       });
     }
@@ -114,7 +131,7 @@ export class SchemaSeedService implements OnModuleInit {
 
           text: {
             create: {
-              value: 'Test text in root container'
+              value: 'Test text1 in root container'
             }
           }
         }
@@ -135,7 +152,7 @@ export class SchemaSeedService implements OnModuleInit {
 
           text: {
             create: {
-              value: 'Test text in container1'
+              value: 'Test text2 in container1'
             }
           }
         }
@@ -157,6 +174,62 @@ export class SchemaSeedService implements OnModuleInit {
       });
     }
 
+    let text3Component = await this.prisma.component.findFirst({
+      where: { id: 'text3', schemaId: schema.id }
+    });
+    if (text3Component == null) {
+      text3Component = await this.prisma.component.create({
+        data: {
+          id: 'text3',
+          parentId: container2Component.id,
+
+          componentSchemaId: textComponentSchema.id,
+          schemaId: schema.id,
+
+          text: {
+            create: {
+              value: 'Test text3 in container2'
+            }
+          },
+          dataBinded: {
+            create: {
+              bindings: {
+                value: '/text'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    let text4Component = await this.prisma.component.findFirst({
+      where: { id: 'text4', schemaId: schema.id }
+    });
+    if (text4Component == null) {
+      text4Component = await this.prisma.component.create({
+        data: {
+          id: 'text4',
+          parentId: container2Component.id,
+
+          componentSchemaId: textComponentSchema.id,
+          schemaId: schema.id,
+
+          text: {
+            create: {
+              value: 'Test text4 in container2'
+            }
+          },
+          dataBinded: {
+            create: {
+              bindings: {
+                value: '/num'
+              }
+            }
+          }
+        }
+      });
+    }
+
     let container3Component = await this.prisma.component.findFirst({
       where: { id: 'container3', schemaId: schema.id }
     });
@@ -168,6 +241,34 @@ export class SchemaSeedService implements OnModuleInit {
 
           componentSchemaId: containerComponentSchema.id,
           schemaId: schema.id
+        }
+      });
+    }
+
+    let text5Component = await this.prisma.component.findFirst({
+      where: { id: 'text5', schemaId: schema.id }
+    });
+    if (text5Component == null) {
+      text5Component = await this.prisma.component.create({
+        data: {
+          id: 'text5',
+          parentId: container3Component.id,
+
+          componentSchemaId: textComponentSchema.id,
+          schemaId: schema.id,
+
+          text: {
+            create: {
+              value: 'Test text5 in container3'
+            }
+          },
+          dataBinded: {
+            create: {
+              bindings: {
+                value: '/bool'
+              }
+            }
+          }
         }
       });
     }
