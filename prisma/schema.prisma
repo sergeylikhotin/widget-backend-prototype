@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id             Int           @id @default(autoincrement())
-  email          String        @unique
-  password       String?
-  roles          Role[]        @default([manager])
-  widget         Widget[]
-  caslAbility    CaslAbility[]
-  activationCode String?       @unique
+  id                       Int           @id @default(autoincrement())
+  email                    String        @unique
+  password                 String?
+  roles                    Role[]        @default([manager])
+  widget                   Widget[]
+  caslAbility              CaslAbility[]
+  activationCode           String?       @unique
+  activationCodeExpiration DateTime?
 }
 
 enum Role {
@@ -27,7 +28,7 @@ enum Role {
 
 model CaslAbility {
   id           Int                @id @default(autoincrement())
-  role         Role
+  role         Role?
   action       CaslAction
   type         CaslPermissionType
   modelName    CaslModels

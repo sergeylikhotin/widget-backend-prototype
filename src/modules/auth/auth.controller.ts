@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   HttpStatus,
-  Param,
   ParseIntPipe,
   Post,
   Query,
@@ -14,12 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import {
-  AuthDto,
-  EmailByCodeDto,
-  EmailDto,
-  GenerateRegisterLinkDto
-} from './auth.dto';
+import { AuthDto, GenerateRegisterLinkDto } from './auth.dto';
 import { AuthService } from './auth.service';
 import { Roles, RolesGuard } from 'src/common/guards/roles.guard';
 import { AccessTokenGuard } from 'src/common/guards/access.guard';
@@ -93,14 +87,17 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
+  @UsePipes(new ValidationPipe())
   @Roles(Role.super_admin)
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Post('register/send-link')
   async createUserByEmail(
     @Res() res: Response,
-    @Body() body: GenerateRegisterLinkDto
+    @Body() body: GenerateRegisterLinkDto,
+    @Query('expire-time-hours', ParseIntPipe)
+    expireTime?: number
   ) {
-    const link = await this.authService.generateRegisterLink(body);
+    const link = await this.authService.generateRegisterLink(body, expireTime);
     const title = 'Register link!';
 
     await this.emailService.send(body.email, title, getRegisterLinkHtml(link));

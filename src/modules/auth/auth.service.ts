@@ -31,13 +31,31 @@ export class AuthService {
     this.appConfig = appConfig;
   }
 
-  async generateRegisterLink({ email, roles }: GenerateRegisterLinkDto) {
+  async generateRegisterLink(
+    { email, roles }: GenerateRegisterLinkDto,
+    expireTime?: number
+  ) {
     const activationCode = uuidv4();
+    const expirationTime = new Date();
+    const inOneHour = 1;
+
+    expirationTime.setHours(
+      expirationTime.getHours() + expireTime ?? inOneHour
+    );
 
     await this._prisma.user.upsert({
       where: { email },
-      update: { roles, activationCode },
-      create: { roles, activationCode, email }
+      update: {
+        roles,
+        activationCode,
+        activationCodeExpiration: expirationTime
+      },
+      create: {
+        roles,
+        activationCode,
+        email,
+        activationCodeExpiration: expirationTime
+      }
     });
 
     const link = this.redirectRegisterUrl(activationCode);
@@ -53,7 +71,7 @@ export class AuthService {
       throw new BadRequestException('Email doesn`t exist or user registered!');
     }
 
-    if (!isExistEmail.password) {
+    if (isExistEmail.password) {
       throw new BadRequestException('User already registered!');
     }
 
@@ -63,6 +81,14 @@ export class AuthService {
 
     if (!isExistCode) {
       throw new BadRequestException('Activation code doesn`t exist!');
+    }
+
+    const isCodeExpired =
+      isExistCode.activationCodeExpiration &&
+      isExistCode.activationCodeExpiration < new Date();
+
+    if (isCodeExpired) {
+      throw new BadRequestException('Activation code expired!');
     }
 
     const hashedPassword = await generateHashFromString(

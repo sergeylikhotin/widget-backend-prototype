@@ -4,8 +4,7 @@ import {
   Schema,
   Widget,
   CaslAction,
-  CaslAbility,
-  CaslModels
+  CaslAbility
 } from '@prisma/client';
 import { AbilityBuilder, ExtractSubjectType, PureAbility } from '@casl/ability';
 import { PrismaQuery, Subjects, createPrismaAbility } from '@casl/prisma';
@@ -37,9 +36,15 @@ export class CaslAbilityFactory {
           where: { role }
         });
 
-        abilities.forEach((value) => this.createAbility(value, user));
+        abilities.forEach((ability) => this.createAbilityByRole(ability));
       })
     );
+
+    const abilities = await this.prisma.caslAbility.findMany({
+      where: { sharedWithId: user.id }
+    });
+
+    abilities.forEach((ability) => this.createAbilityByResource(ability));
 
     return this.caslAbilityBuilder.build({
       detectSubjectType: (item) =>
@@ -47,16 +52,18 @@ export class CaslAbilityFactory {
     });
   }
 
-  private createAbility(
-    { type, action, modelName, sharedWithId, resourceId }: CaslAbility,
-    user: User
-  ) {
-    if (user?.id && sharedWithId === user?.id) {
-      this.caslAbilityBuilder[type](action, modelName as CaslModels, {
-        id: resourceId
-      });
-    } else if (!sharedWithId && !resourceId) {
-      this.caslAbilityBuilder[type](action, modelName as CaslModels);
-    }
+  private createAbilityByRole({ type, action, modelName }: CaslAbility) {
+    this.caslAbilityBuilder[type](action, modelName);
+  }
+
+  private createAbilityByResource({
+    type,
+    action,
+    modelName,
+    resourceId
+  }: CaslAbility) {
+    this.caslAbilityBuilder[type](action, modelName, {
+      id: resourceId
+    });
   }
 }

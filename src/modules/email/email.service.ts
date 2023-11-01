@@ -13,10 +13,6 @@ export class EmailService {
     private readonly mailerService: MailerService
   ) {
     const config = this.configService.getOrThrow(ConfigNames.EMAIL);
-    if (!config) {
-      throw new Error('Email config does not exists');
-    }
-
     this.emailConfig = config;
   }
 

@@ -7,6 +7,7 @@ export const userSeed: User[] = [
     email: 'example@mail.com',
     password: generateHashFromStringSync('admin', 4),
     roles: [Role.super_admin],
-    activationCode: null
+    activationCode: null,
+    activationCodeExpiration: null
   }
 ];
