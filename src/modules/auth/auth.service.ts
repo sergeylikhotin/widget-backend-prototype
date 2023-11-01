@@ -64,19 +64,15 @@ export class AuthService {
     return link;
   }
 
-  async createUserAccountWithoutPassword({
-    email,
-    roles
-  }: UserAccountWithoutPasswordDto) {
-    await this._prisma.user.upsert({
-      where: { email },
-      update: {
-        roles
-      },
-      create: {
-        roles,
-        email
-      }
+  async createUserAccountWithoutPassword(dto: UserAccountWithoutPasswordDto) {
+    await this._prisma.user.create({
+      data: { ...dto }
+    });
+  }
+
+  async deleteUserByEmail({ email }: EmailDto) {
+    await this._prisma.user.delete({
+      where: { email }
     });
   }
 

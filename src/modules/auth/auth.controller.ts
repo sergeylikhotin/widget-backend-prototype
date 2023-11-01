@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   ParseIntPipe,
@@ -114,6 +115,15 @@ export class AuthController {
     @Body() body: UserAccountWithoutPasswordDto
   ) {
     await this.authService.createUserAccountWithoutPassword(body);
+    res.status(HttpStatus.OK).json(new MessageResponse('Success'));
+  }
+
+  @ApiBearerAuth()
+  @Roles(Role.super_admin)
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Delete('delete/user-account')
+  async deleteUserByEmail(@Res() res: Response, @Body() body: EmailDto) {
+    await this.authService.deleteUserByEmail(body);
     res.status(HttpStatus.OK).json(new MessageResponse('Success'));
   }
 
