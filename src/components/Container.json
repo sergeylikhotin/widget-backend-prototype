@@ -1,0 +1,16 @@
+{
+  "name": "Base components container",
+  "description": "Base component container.",
+  "props": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {},
+    "required": []
+  },
+  "bindings": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {},
+    "required": []
+  }
+}

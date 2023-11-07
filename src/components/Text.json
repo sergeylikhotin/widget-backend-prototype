@@ -1,0 +1,24 @@
+{
+  "name": "Base text component",
+  "description": "Base text component. Render value in <p/> tag.",
+  "props": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "string",
+        "description": "Value to render."
+      }
+    },
+    "required": ["value"]
+  },
+  "bindings": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "string",
+        "format": "json-pointer"
+      }
+    },
+    "required": ["value"]
+  }
+}

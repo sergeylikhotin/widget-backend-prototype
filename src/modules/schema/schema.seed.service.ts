@@ -1,7 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { schemaSeedData } from './schema.seed.data';
-import { ComponentType } from '@prisma/client';
 import { widgetSeedData } from '../widget/widget.seed.data';
 
 @Injectable()
@@ -9,7 +8,7 @@ export class SchemaSeedService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
-    let widget = await this.prisma.widget.findFirst();
+    /*let widget = await this.prisma.widget.findFirst();
     if (widget == null) {
       widget = await this.prisma.widget.create({
         data: widgetSeedData
@@ -292,6 +291,6 @@ export class SchemaSeedService implements OnModuleInit {
           }
         }
       });
-    }
+    }*/
   }
 }

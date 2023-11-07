@@ -1,134 +1,175 @@
+model Tournament {
+  id String @id @default(uuid())
+
+  name  String
+  title String
+
+  startAt DateTime
+  endAt   DateTime
+
+  prizePool String
+
+  stages Stage[]
+
+  dataSources TournamentDataSource[]
+}
+
+enum StageType {
+  UNKNOWN
+
+  ORGANIZATIONAL
+  ROUND_ROBIN
+  SWISS
+  BRACKET_SINGLE
+  BRACKET_DOUBLE_SEED_LOSER
+  BRACKET_DOUBLE_ALL_WINNER
+  SHOWMATCH
+  GSL
+  PLACEMENT
+}
+
+model Stage {
+  id String @id @default(uuid())
+
+  name  String
+  title String
+
+  type              StageType @default(UNKNOWN)
+  formatDescription String[]
+
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+}
+
+enum SeriesType {
+  UNKNOWN
+
+  BEST_OF_ONE
+  BEST_OF_TWO
+  BEST_OF_THREE
+  BEST_OF_FIVE
+}
+
+model Series {
+  id String @id @default(uuid())
+
+  type SeriesType @default(UNKNOWN)
+
+  team1Id   String?
+  team1     Team?   @relation("Team1", fields: [team1Id], references: [id])
+  team1Wins Int
+
+  team2Id   String?
+  team2     Team?   @relation("Team2", fields: [team2Id], references: [id])
+  team2Wins Int
+
+  matches Match[]
+}
+
+model Match {
+  id String @id @default(uuid())
+
+  dotaMatchId Int?
+
+  team1Score Int
+  team2Score Int
+
+  seriesId String
+  series   Series @relation(fields: [seriesId], references: [id])
+}
+
+model Team {
+  id String @id @default(uuid())
+
+  maincastTeamId Int?
+  dotaTeamId     Int?
+
+  name String
+  tag  String
+
+  logo String
+
+  team1Series Series[] @relation("Team1")
+  team2Series Series[] @relation("Team2")
+}
+
 model Widget {
   id String @id @default(uuid())
 
   name String
 
-  schema Schema?
-  // dataSources DataSource[]
+  schema      Schema?
+  dataSources DataSource[]
 }
 
-// enum DataSourceType {
-//   Tournament
-//   Realtime
-//   Info
-// }
-//
-// model DataSource {
-//   id String @id @default(uuid())
-//
-//   name String
-//   type DataSourceType
-//
-//   widget   Widget? @relation(fields: [widgetId], references: [id])
-//   widgetId String?
-//
-//   tournament TournamentDataSource?
-// }
-//
-// model TournamentDataSource {
-//   id         String     @id
-//   dataSource DataSource @relation(fields: [id], references: [id])
-//
-//   tournamentId String
-//
-//   maincast MaincastTournamentDataSource?
-//   dota2    Dota2APITournamentDataSource?
-// }
-//
-// model MaincastTournamentDataSource {
-//   id                   String               @id
-//   tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
-//
-//   tournamentId String
-// }
-//
-// model Dota2APITournamentDataSource {
-//   id                   String               @id
-//   tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
-//
-//   tournamentId String
-// }
+enum DataSourceType {
+  Tournament
+}
+
+model DataSource {
+  id String @id @default(uuid())
+
+  name String
+  type DataSourceType
+
+  widget   Widget? @relation(fields: [widgetId], references: [id])
+  widgetId String?
+
+  tournament TournamentDataSource?
+}
+
+model TournamentDataSource {
+  id         String     @id
+  dataSource DataSource @relation(fields: [id], references: [id])
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+
+  maincast MaincastApiTournamentDataSource?
+  dota2    DotaApiTournamentDataSource?
+}
+
+model MaincastApiTournamentDataSource {
+  id                   String               @id
+  tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
+
+  leagueIds String[]
+}
+
+model DotaApiTournamentDataSource {
+  id                   String               @id
+  tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
+
+  leagueId String
+}
 
 model Schema {
   id   String @id @default(uuid())
   name String
 
-  components Component[]
+  components Component[] @relation("SchemaComponent")
 
-  widget   Widget @relation(fields: [widgetId], references: [id])
   widgetId String @unique
-}
-
-enum ComponentType {
-  Root
-  Base
-
-  DataSource
-
-  Text
-  Image
-}
-
-model ComponentSchema {
-  id   String @id @default(uuid())
-  name String
-
-  type ComponentType
-
-  components Component[]
+  widget   Widget @relation(fields: [widgetId], references: [id])
 }
 
 model Component {
   id String @id @default(uuid())
 
   schemaId String
-  schema   Schema @relation(fields: [schemaId], references: [id])
+  schema   Schema @relation("SchemaComponent", fields: [schemaId], references: [id])
 
   parentId String?
   parent   Component? @relation("ComponentInheritance", fields: [parentId], references: [id])
 
-  componentSchemaId String
-  componentSchema   ComponentSchema @relation(fields: [componentSchemaId], references: [id])
+  type String @default("Unknown")
 
-  text  TextComponent?
-  image ImageComponent?
-
-  dataBinded DataBindedComponent?
-  dataSource DataSourceComponent?
+  props    Json?
+  bindings Json?
 
   eventsContainer EventsContainer?
 
   children Component[] @relation("ComponentInheritance")
-}
-
-model TextComponent {
-  id        String    @id
-  component Component @relation(fields: [id], references: [id])
-
-  value String
-}
-
-model ImageComponent {
-  id        String    @id
-  component Component @relation(fields: [id], references: [id])
-
-  url String
-}
-
-model DataBindedComponent {
-  id        String    @id
-  component Component @relation(fields: [id], references: [id])
-
-  // JSON field
-  bindings Json
-}
-
-model DataSourceComponent {
-  id        String    @id
-  component Component @relation(fields: [id], references: [id])
-
-  // Data field path
-  source String
 }
 
 model EventsContainer {
@@ -170,10 +211,10 @@ model ActionParam {
 }
 
 enum ActionParamType {
-  String
-  Number
-  Boolean
-  Date
+  STRING
+  NUMBER
+  BOOLEAN
+  DATE
 
   JSON
 }

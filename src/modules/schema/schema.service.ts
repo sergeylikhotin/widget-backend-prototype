@@ -1,33 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
 import {
   ComponentModel,
   SchemaComponentFactory
 } from './schema.component.factory';
+import { CreateSchemaDto } from './schema.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 const componentFullArgs = Prisma.validator<Prisma.ComponentDefaultArgs>()({
   include: {
-    componentSchema: true,
-
-    dataBinded: true,
-    dataSource: true,
-
-    text: true,
-    image: true,
-
     eventsContainer: true
   }
 });
-const componentWithSchema = Prisma.validator<Prisma.ComponentDefaultArgs>()({
-  include: { componentSchema: true }
-});
-export type ComponentFull = Prisma.ComponentGetPayload<
-  typeof componentFullArgs
->;
-export type ComponentWithSchema = Prisma.ComponentGetPayload<
-  typeof componentWithSchema
->;
+export type Component = Prisma.ComponentGetPayload<typeof componentFullArgs>;
 
 @Injectable()
 export class SchemaService {
@@ -36,13 +21,19 @@ export class SchemaService {
     private readonly schemaComponentFactory: SchemaComponentFactory
   ) {}
 
+  async create(dto: CreateSchemaDto) {
+    return this.prisma.schema.create({
+      data: dto
+    });
+  }
+
   async build(schemaId: string) {
     const schema = await this.prisma.schema.findUnique({
       where: { id: schemaId },
       include: { components: componentFullArgs }
     });
-    const components: ComponentFull[] = schema.components;
-    const rootComponent: ComponentFull = components.find(
+    const components: Component[] = schema.components;
+    const rootComponent: Component = components.find(
       (comp) => comp.parentId == null
     );
     const childIndexMap = this.createChildIndexMap(components);
@@ -51,9 +42,9 @@ export class SchemaService {
   }
 
   private createChildIndexMap(
-    components: ComponentFull[]
-  ): Map<string, ComponentFull[]> {
-    const map = new Map<string, ComponentFull[]>();
+    components: Component[]
+  ): Map<string, Component[]> {
+    const map = new Map<string, Component[]>();
 
     components.forEach((comp) => {
       const key = comp.parentId ?? 'root';
@@ -67,8 +58,8 @@ export class SchemaService {
   }
 
   private buildComponentTree(
-    component: ComponentFull,
-    childIndexMap: Map<string, ComponentFull[]>
+    component: Component,
+    childIndexMap: Map<string, Component[]>
   ): ComponentModel {
     const model = this.schemaComponentFactory.create(component);
 

@@ -6,8 +6,8 @@ export class WidgetController {
   constructor(private readonly widgetService: WidgetService) {}
 
   @Get()
-  async getAll() {
-    return this.widgetService.getAll();
+  async getMany() {
+    return this.widgetService.getMany();
   }
 
   @Get(':widgetId')
