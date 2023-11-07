@@ -7,7 +7,6 @@ import jwtConfig from './common/config/jwt.config';
 import emailConfig from './common/config/email.config';
 import clientConfig from './common/config/client.config';
 
-import { SchemaRenderModule } from './modules/schema-render/schema-render.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CaslModule } from './modules/casl/casl.module';
@@ -24,14 +23,13 @@ import { TournamentModule } from './modules/data/tournament/tournament.module';
       load: [appConfig, cookieConfig, jwtConfig, emailConfig, clientConfig],
       isGlobal: true
     }),
-    
+
     PrismaModule,
-    SchemaRenderModule,
     AuthModule,
     CaslModule,
     WidgetModule,
     EmailModule,
-    
+
     SchemaModule,
     ComponentModule,
     DataModule,

@@ -11,7 +11,7 @@ export class WidgetService {
     private readonly prisma: PrismaService,
     private readonly schemaService: SchemaService
   ) {}
-  
+
   async getWidgets({ skip, take }: PaginationDto) {
     const widgets = await this.prisma.widget.findMany({
       skip,

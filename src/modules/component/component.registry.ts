@@ -24,8 +24,10 @@ class ComponentSchema {
 
 @Injectable()
 export class ComponentSchemaRegistry implements OnModuleInit {
+  static COMPONENTS_DIR_PATH = path.join(process.cwd(), './src/components');
   private readonly registry: Map<string, ComponentSchema>;
   private readonly ajv: Ajv;
+
   constructor() {
     this.registry = new Map<string, ComponentSchema>();
 
@@ -64,6 +66,4 @@ export class ComponentSchemaRegistry implements OnModuleInit {
       this.registry.set(type, new ComponentSchema(schema, this.ajv));
     }
   }
-
-  static COMPONENTS_DIR_PATH = path.join(process.cwd(), './src/components');
 }

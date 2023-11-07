@@ -28,6 +28,7 @@ export class CaslAbilityFactory {
   private readonly caslAbilityBuilder = new AbilityBuilder<AppAbility>(
     createPrismaAbility
   );
+
   constructor(private readonly prisma: PrismaService) {}
 
   async createForUser(user: User) {

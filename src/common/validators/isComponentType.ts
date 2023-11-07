@@ -24,6 +24,7 @@ export class IsComponentTypeConstraint implements ValidatorConstraintInterface {
     return `${args.value} is not valid component type.`;
   }
 }
+
 export function IsComponentType(validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string) {
     registerDecorator({

@@ -20,6 +20,7 @@ export class AccessTokenGuard
   ) {
     super();
   }
+
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<GuardedRequest>();
     const accessToken = request.headers.authorization?.split(' ')[1];

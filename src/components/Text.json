@@ -9,7 +9,9 @@
         "description": "Value to render."
       }
     },
-    "required": ["value"]
+    "required": [
+      "value"
+    ]
   },
   "bindings": {
     "type": "object",
@@ -19,6 +21,8 @@
         "format": "json-pointer"
       }
     },
-    "required": ["value"]
+    "required": [
+      "value"
+    ]
   }
 }

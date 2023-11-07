@@ -8,6 +8,7 @@ export class EmailDto {
   @ApiProperty()
   email: string;
 }
+
 export class AuthDto extends EmailDto {
   @IsString()
   @MaxLength(16)

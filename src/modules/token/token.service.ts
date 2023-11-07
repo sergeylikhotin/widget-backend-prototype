@@ -14,6 +14,7 @@ export interface IGeneratedTokens {
 @Injectable()
 export class TokenService {
   private readonly _config: JwtConfig;
+
   constructor(
     private readonly _prisma: PrismaService,
     private readonly _jwtService: JwtService,

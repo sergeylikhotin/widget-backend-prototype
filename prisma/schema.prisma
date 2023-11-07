@@ -3,7 +3,6 @@ model User {
   email                    String        @unique
   password                 String?
   roles                    Role[]        @default([manager])
-  widget                   Widget[]
   caslAbility              CaslAbility[]
   activationCode           String?       @unique
   activationCodeExpiration DateTime?

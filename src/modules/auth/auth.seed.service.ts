@@ -8,6 +8,7 @@ import { User } from '@prisma/client';
 export class AuthSeed implements SeedInterface, OnModuleInit {
   private readonly _list: User[] = userSeed;
   private readonly _logger = new Logger(AuthSeed.name);
+
   constructor(private readonly _prisma: PrismaService) {}
 
   async onModuleInit() {

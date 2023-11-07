@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class AuthService {
   private readonly appConfig: AppConfig;
   private readonly clientAppConfig: ClientAppConfig;
+
   constructor(
     private readonly _prisma: PrismaService,
     private readonly configService: ConfigService,

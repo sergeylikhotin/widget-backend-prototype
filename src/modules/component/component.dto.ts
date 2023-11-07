@@ -1,5 +1,11 @@
 import { Component } from '../schema/schema.service';
-import { IsEmpty, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import {
+  IsEmpty,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID
+} from 'class-validator';
 import { IsEntityExist } from '../../common/validators/isEntityExist';
 import { IsComponentType } from '../../common/validators/isComponentType';
 import {

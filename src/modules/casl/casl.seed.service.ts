@@ -8,6 +8,7 @@ import { caslSeed } from './casl.data';
 export class CaslSeed implements SeedInterface, OnModuleInit {
   private readonly _list: CaslAbility[] = caslSeed;
   private readonly _logger = new Logger(CaslSeed.name);
+
   constructor(private readonly _prisma: PrismaService) {}
 
   async onModuleInit() {

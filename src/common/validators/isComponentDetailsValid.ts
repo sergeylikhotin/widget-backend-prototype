@@ -70,6 +70,7 @@ export enum DetailsType {
   Props = 'props',
   Bindings = 'bindings'
 }
+
 export function IsComponentDetailsValid(
   typePropertyName: string,
   detailsType: DetailsType,

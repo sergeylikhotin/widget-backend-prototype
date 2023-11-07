@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
   Query,
   Res,
   UseGuards
@@ -31,7 +32,7 @@ export class WidgetController {
 
     res.status(HttpStatus.OK).json(widgets);
   }
-  
+
   /*@Get()
   async getMany() {
     return this.widgetService.getMany();

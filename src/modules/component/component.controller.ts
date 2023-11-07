@@ -48,6 +48,7 @@ export class ComponentController {
   async remove(@Param('componentId', ParseUUIDPipe) componentId: string) {
     return await this.componentService.remove(componentId);
   }
+
   @Get('/registry')
   getRegistry() {
     return this.registry.toJSON();

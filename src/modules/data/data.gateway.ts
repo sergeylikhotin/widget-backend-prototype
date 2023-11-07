@@ -17,6 +17,8 @@ import { OnModuleDestroy } from '@nestjs/common';
 export class DataGateway
   implements OnGatewayInit, OnGatewayConnection, OnModuleDestroy
 {
+  @WebSocketServer()
+  server: Server;
   private interval: NodeJS.Timeout;
   private data: any = {
     text: 'Test text',
@@ -26,14 +28,12 @@ export class DataGateway
     array: []
   };
 
-  @WebSocketServer()
-  server: Server;
-
   constructor(private readonly config: ConfigService) {}
 
   handleConnection(client: Socket) {
     client.emit('data', this.data);
   }
+
   afterInit() {
     this.interval = setInterval(
       () => {
