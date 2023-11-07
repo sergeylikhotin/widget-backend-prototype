@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Widget } from '@prisma/client';
 import { SchemaService } from '../schema/schema.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaginationDto } from 'src/common/dto';
 import { CreateWidgetDto, UpdateWidgetDto } from './widget.dto';
 
 @Injectable()
@@ -10,6 +11,15 @@ export class WidgetService {
     private readonly prisma: PrismaService,
     private readonly schemaService: SchemaService
   ) {}
+  
+  async getWidgets({ skip, take }: PaginationDto) {
+    const widgets = await this.prisma.widget.findMany({
+      skip,
+      take
+    });
+
+    return widgets;
+  }
 
   async create(dto: CreateWidgetDto) {
     return this.prisma.widget.create({

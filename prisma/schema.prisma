@@ -1,3 +1,46 @@
+model User {
+  id                       Int           @id @default(autoincrement())
+  email                    String        @unique
+  password                 String?
+  roles                    Role[]        @default([manager])
+  widget                   Widget[]
+  caslAbility              CaslAbility[]
+  activationCode           String?       @unique
+  activationCodeExpiration DateTime?
+}
+
+enum Role {
+  super_admin
+  admin
+  customer
+  manager
+  content_manager
+}
+
+model CaslAbility {
+  id           Int                @id @default(autoincrement())
+  role         Role?
+  action       CaslAction
+  type         CaslPermissionType
+  modelName    CaslModels
+  sharedWith   User?              @relation(fields: [sharedWithId], references: [id])
+  sharedWithId Int?
+  resourceId   Int?
+}
+
+enum CaslPermissionType {
+  can
+  cannot
+}
+
+enum CaslAction {
+  read
+  create
+  update
+  delete
+  manage
+}
+
 model Tournament {
   id String @id @default(uuid())
 
@@ -217,6 +260,15 @@ enum ActionParamType {
   DATE
 
   JSON
+}
+
+enum CaslModels {
+  all
+  User
+  Widget
+  Schema
+  Component
+  CaslAbility
 }
 
 generator client {
