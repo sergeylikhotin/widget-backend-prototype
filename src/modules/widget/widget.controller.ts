@@ -31,4 +31,19 @@ export class WidgetController {
 
     res.status(HttpStatus.OK).json(widgets);
   }
+  
+  /*@Get()
+  async getMany() {
+    return this.widgetService.getMany();
+  }*/
+
+  @Get(':widgetId')
+  async getOne(@Param('widgetId') widgetId: string) {
+    return this.widgetService.getOne(widgetId);
+  }
+
+  @Get(':widgetId/render')
+  async render(@Param('widgetId') widgetId: string) {
+    return this.widgetService.render(widgetId);
+  }
 }

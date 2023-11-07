@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { WidgetController } from './widget.controller';
 import { WidgetService } from './widget.service';
+import { WidgetController } from './widget.controller';
+import { SchemaModule } from '../schema/schema.module';
 
 @Module({
-  imports: [],
-  controllers: [WidgetController],
   providers: [WidgetService],
-  exports: []
+  controllers: [WidgetController],
+  imports: [SchemaModule]
 })
 export class WidgetModule {}

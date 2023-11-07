@@ -1,12 +1,3 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 model User {
   id                       Int           @id @default(autoincrement())
   email                    String        @unique
@@ -50,31 +41,225 @@ enum CaslAction {
   manage
 }
 
+model Tournament {
+  id String @id @default(uuid())
+
+  name  String
+  title String
+
+  startAt DateTime
+  endAt   DateTime
+
+  prizePool String
+
+  stages Stage[]
+
+  dataSources TournamentDataSource[]
+}
+
+enum StageType {
+  UNKNOWN
+
+  ORGANIZATIONAL
+  ROUND_ROBIN
+  SWISS
+  BRACKET_SINGLE
+  BRACKET_DOUBLE_SEED_LOSER
+  BRACKET_DOUBLE_ALL_WINNER
+  SHOWMATCH
+  GSL
+  PLACEMENT
+}
+
+model Stage {
+  id String @id @default(uuid())
+
+  name  String
+  title String
+
+  type              StageType @default(UNKNOWN)
+  formatDescription String[]
+
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+}
+
+enum SeriesType {
+  UNKNOWN
+
+  BEST_OF_ONE
+  BEST_OF_TWO
+  BEST_OF_THREE
+  BEST_OF_FIVE
+}
+
+model Series {
+  id String @id @default(uuid())
+
+  type SeriesType @default(UNKNOWN)
+
+  team1Id   String?
+  team1     Team?   @relation("Team1", fields: [team1Id], references: [id])
+  team1Wins Int
+
+  team2Id   String?
+  team2     Team?   @relation("Team2", fields: [team2Id], references: [id])
+  team2Wins Int
+
+  matches Match[]
+}
+
+model Match {
+  id String @id @default(uuid())
+
+  dotaMatchId Int?
+
+  team1Score Int
+  team2Score Int
+
+  seriesId String
+  series   Series @relation(fields: [seriesId], references: [id])
+}
+
+model Team {
+  id String @id @default(uuid())
+
+  maincastTeamId Int?
+  dotaTeamId     Int?
+
+  name String
+  tag  String
+
+  logo String
+
+  team1Series Series[] @relation("Team1")
+  team2Series Series[] @relation("Team2")
+}
+
 model Widget {
-  id       Int    @id @default(autoincrement())
-  name     String
-  author   User?  @relation(fields: [authorId], references: [id])
-  authorId Int
+  id String @id @default(uuid())
+
+  name String
+
+  schema      Schema?
+  dataSources DataSource[]
+}
+
+enum DataSourceType {
+  Tournament
+}
+
+model DataSource {
+  id String @id @default(uuid())
+
+  name String
+  type DataSourceType
+
+  widget   Widget? @relation(fields: [widgetId], references: [id])
+  widgetId String?
+
+  tournament TournamentDataSource?
+}
+
+model TournamentDataSource {
+  id         String     @id
+  dataSource DataSource @relation(fields: [id], references: [id])
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+
+  maincast MaincastApiTournamentDataSource?
+  dota2    DotaApiTournamentDataSource?
+}
+
+model MaincastApiTournamentDataSource {
+  id                   String               @id
+  tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
+
+  leagueIds String[]
+}
+
+model DotaApiTournamentDataSource {
+  id                   String               @id
+  tournamentDataSource TournamentDataSource @relation(fields: [id], references: [id])
+
+  leagueId String
 }
 
 model Schema {
-  id   Int    @id @default(autoincrement())
+  id   String @id @default(uuid())
   name String
 
-  components Component[]
+  components Component[] @relation("SchemaComponent")
+
+  widgetId String @unique
+  widget   Widget @relation(fields: [widgetId], references: [id])
 }
 
 model Component {
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
 
-  schema   Schema? @relation(fields: [schemaId], references: [id])
-  schemaId Int?
+  schemaId String
+  schema   Schema @relation("SchemaComponent", fields: [schemaId], references: [id])
 
-  name String
+  parentId String?
+  parent   Component? @relation("ComponentInheritance", fields: [parentId], references: [id])
 
-  parentId Int?
-  parent   Component?  @relation("ComponentToComponent", fields: [parentId], references: [id])
-  children Component[] @relation("ComponentToComponent")
+  type String @default("Unknown")
+
+  props    Json?
+  bindings Json?
+
+  eventsContainer EventsContainer?
+
+  children Component[] @relation("ComponentInheritance")
+}
+
+model EventsContainer {
+  id        String    @id
+  component Component @relation(fields: [id], references: [id])
+
+  events Event[]
+}
+
+model Event {
+  id String @id @default(uuid())
+
+  type    String
+  actions Action[]
+
+  eventsComponentId String?
+  eventsComponent   EventsContainer? @relation(fields: [eventsComponentId], references: [id])
+}
+
+model Action {
+  id String @id @default(uuid())
+
+  name   String
+  params ActionParam[]
+
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id])
+}
+
+model ActionParam {
+  id String @id @default(uuid())
+
+  name  String
+  type  ActionParamType
+  value String
+
+  actionId String?
+  action   Action? @relation(fields: [actionId], references: [id])
+}
+
+enum ActionParamType {
+  STRING
+  NUMBER
+  BOOLEAN
+  DATE
+
+  JSON
 }
 
 enum CaslModels {
@@ -84,4 +269,13 @@ enum CaslModels {
   Schema
   Component
   CaslAbility
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
