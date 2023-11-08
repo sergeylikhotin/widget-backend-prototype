@@ -8,7 +8,7 @@ import { CaslService } from './casl.service';
 
 @Global()
 @Module({
-  imports: [CacheModule.register(), forwardRef(() => PrismaModule)],
+  imports: [],
   controllers: [CaslController],
   providers: [CaslService, CaslAbilityFactory, CaslSeed],
   exports: [CaslService, CaslAbilityFactory, CaslSeed]

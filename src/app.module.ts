@@ -24,7 +24,7 @@ import { WidgetModule } from './modules/widget/widget.module';
       load: [appConfig, cookieConfig, jwtConfig, emailConfig, clientConfig],
       isGlobal: true
     }),
-    CacheModule.register(),
+    CacheModule.register({ isGlobal: true }),
 
     PrismaModule,
     AuthModule,
