@@ -5,7 +5,7 @@ import {
   SetMetadata
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { CaslAction } from '@prisma/client';
+import { PermissionAction } from '@prisma/client';
 import {
   AppAbility,
   AppSubjects,
@@ -24,11 +24,11 @@ export const CheckPolicies = (...handlers: PolicyHandler[]) =>
   SetMetadata(CHECK_POLICIES_KEY, handlers);
 
 export class CaslPolicyHandler implements IPolicyHandler {
-  action: CaslAction;
+  action: PermissionAction;
   subject: AppSubjects;
   field?: string;
 
-  constructor(action: CaslAction, subject: AppSubjects, field?: string) {
+  constructor(action: PermissionAction, subject: AppSubjects, field?: string) {
     this.action = action;
     this.subject = subject;
     this.field = field;

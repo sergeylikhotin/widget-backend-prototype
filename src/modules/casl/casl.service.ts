@@ -1,33 +1,59 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PermissionDto } from './casl.dto';
 import { PaginationDto } from 'src/common/dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { Permission, User } from '@prisma/client';
+
+let count = 0;
 
 @Injectable()
 export class CaslService {
-  constructor(private readonly prisma: PrismaService) {
-    // const config = this._configService.getOrThrow<AppConfig>(ConfigNames.APP);
-    // this._appConfig = config;
-  }
-
-  async getRoles() {}
-
-  async addRoleForUser() {}
-
-  async updateRoleForUser() {}
-
-  async removeRoleForUser() {}
+  private readonly cacheKey = 'permission';
+  private readonly lock = false;
+  constructor(
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private readonly prisma: PrismaService
+  ) {}
 
   async getPermissions({ skip, take }: PaginationDto) {
-    const permissions = await this.prisma.caslAbility.findMany({
-      skip,
-      take
-    });
+    const cachedPerms = await this.cacheManager.get<Permission[]>(
+      this.cacheKey
+    );
 
-    return permissions;
+    if (!cachedPerms) {
+      console.log('Render times', ++count);
+      const permissions = await this.prisma.permission.findMany({
+        skip,
+        take
+      });
+
+      await this.cacheManager.set(this.cacheKey, permissions);
+      return permissions;
+    }
+
+    return cachedPerms;
   }
 
-  async addPermission(dto: PermissionDto) {
+  async getPermissionsForUser(user: User) {
+    const cacheKey = `${this.cacheKey}:${user.id}`;
+    const cachedPerms = await this.cacheManager.get<Permission[]>(cacheKey);
+
+    if (!cachedPerms) {
+      const permissions = await this.prisma.permission.findMany({
+        where: { OR: [{ roleId: user.roleId }, { sharedWithId: user.id }] }
+      });
+
+      await this.cacheManager.set(cacheKey, permissions);
+      return permissions;
+    }
+
+    return cachedPerms;
+  }
+
+  async addPermission(dto: PermissionDto, user: User) {
+    const cacheKey = `${this.cacheKey}:${user.id}`;
     const allowedCondition =
       (dto.resourceId && !dto.sharedWithId) ||
       (!dto.resourceId && dto.sharedWithId);
@@ -38,22 +64,33 @@ export class CaslService {
       );
     }
 
-    const isExist = await this.prisma.caslAbility.findFirst({
-      where: { ...dto }
+    const isExist = await this.prisma.permission.findFirst({
+      where: dto
     });
 
     if (isExist) {
       throw new BadRequestException('Permission already exist!');
     }
 
-    await this.prisma.caslAbility.create({ data: dto });
+    await this.prisma.permission.create({ data: dto });
+    await this.cacheManager.del(this.cacheKey);
+    await this.cacheManager.del(cacheKey);
   }
 
-  async updatePermission(id: number, dto: PermissionDto) {
-    await this.prisma.caslAbility.update({ where: { id }, data: dto });
+  async updatePermission(id: number, dto: PermissionDto, user: User) {
+    const cacheKey = `${this.cacheKey}:${user.id}`;
+    await this.prisma.permission.update({
+      where: { id },
+      data: dto
+    });
+    await this.cacheManager.del(this.cacheKey);
+    await this.cacheManager.del(cacheKey);
   }
 
-  async removePermission(id: number) {
-    await this.prisma.caslAbility.delete({ where: { id } });
+  async removePermission(id: number, user: User) {
+    const cacheKey = `${this.cacheKey}:${user.id}`;
+    await this.prisma.permission.delete({ where: { id } });
+    await this.cacheManager.del(this.cacheKey);
+    await this.cacheManager.del(cacheKey);
   }
 }

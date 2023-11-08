@@ -27,6 +27,7 @@ import { getRegisterLinkHtml } from '../email/email.html';
 import { EmailService } from '../email/email.service';
 import { AuthDto, EmailDto, UserAccountWithoutPasswordDto } from './auth.dto';
 import { AuthService } from './auth.service';
+import { AccessRole } from '../casl/casl.data';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -72,7 +73,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @Roles(Role.super_admin)
+  @Roles(AccessRole.super_admin)
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Get('test-role-guard')
   async testRole(@Res() res: Response) {
@@ -89,7 +90,7 @@ export class AuthController {
 
   @ApiBearerAuth()
   @UsePipes(new ValidationPipe())
-  @Roles(Role.super_admin)
+  @Roles(AccessRole.super_admin)
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Post('register/send-link')
   async sendEmailWithLink(
@@ -107,7 +108,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @Roles(Role.super_admin)
+  @Roles(AccessRole.super_admin)
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Post('register/user-account')
   async createUserAccountWithoutPassword(
@@ -119,7 +120,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @Roles(Role.super_admin)
+  @Roles(AccessRole.super_admin)
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Delete('delete/user-account')
   async deleteUserByEmail(@Res() res: Response, @Body() body: EmailDto) {

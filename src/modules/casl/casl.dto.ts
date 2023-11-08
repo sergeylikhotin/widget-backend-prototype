@@ -1,8 +1,8 @@
-import { $Enums, CaslAbility } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsArray, IsInt, IsPositive, IsNumber } from 'class-validator';
+import { $Enums, Permission } from '@prisma/client';
+import { IsEnum, IsInt, IsPositive, IsString, IsUUID } from 'class-validator';
 
-export class PermissionDto implements Omit<CaslAbility, 'id'> {
+export class PermissionDto implements Omit<Permission, 'id' | 'role'> {
   @ApiProperty({
     description: 'The id of the target user'
   })
@@ -20,24 +20,25 @@ export class PermissionDto implements Omit<CaslAbility, 'id'> {
   @ApiProperty({
     description: 'The role for permission'
   })
-  @IsEnum($Enums.Role)
-  role: $Enums.Role;
+  @IsString()
+  @IsUUID()
+  roleId: string;
 
   @ApiProperty({
     description: 'The action that is allowed or denied by this permission.'
   })
-  @IsEnum($Enums.CaslAction)
-  action: $Enums.CaslAction;
+  @IsEnum($Enums.PermissionAction)
+  action: $Enums.PermissionAction;
 
   @ApiProperty({
     description: 'The type of the permission (values: can or cannot).'
   })
-  @IsEnum($Enums.CaslPermissionType)
-  type: $Enums.CaslPermissionType;
+  @IsEnum($Enums.PermissionType)
+  type: $Enums.PermissionType;
 
   @ApiProperty({
     description: 'The model name for which the permission is defined.'
   })
-  @IsEnum($Enums.CaslModels)
-  modelName: $Enums.CaslModels;
+  @IsString()
+  modelName: string;
 }

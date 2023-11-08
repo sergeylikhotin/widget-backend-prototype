@@ -1,11 +1,14 @@
-import { Global, Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
+import { Global, Module, forwardRef } from '@nestjs/common';
+import { PrismaModule } from '../prisma/prisma.module';
 import { CaslAbilityFactory } from './casl-ability.factory';
+import { CaslController } from './casl.controller';
 import { CaslSeed } from './casl.seed.service';
 import { CaslService } from './casl.service';
-import { CaslController } from './casl.controller';
 
 @Global()
 @Module({
+  imports: [CacheModule.register(), forwardRef(() => PrismaModule)],
   controllers: [CaslController],
   providers: [CaslService, CaslAbilityFactory, CaslSeed],
   exports: [CaslService, CaslAbilityFactory, CaslSeed]

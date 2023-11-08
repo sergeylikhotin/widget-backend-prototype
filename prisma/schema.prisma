@@ -1,38 +1,39 @@
 model User {
-  id                       Int           @id @default(autoincrement())
-  email                    String        @unique
+  id                       Int          @id @default(autoincrement())
+  email                    String       @unique
   password                 String?
-  roles                    Role[]        @default([manager])
-  caslAbility              CaslAbility[]
-  activationCode           String?       @unique
+  role                     Role         @relation(fields: [roleId], references: [id])
+  caslAbility              Permission[]
+  activationCode           String?      @unique
   activationCodeExpiration DateTime?
+  roleId                   String
 }
 
-enum Role {
-  super_admin
-  admin
-  customer
-  manager
-  content_manager
+model Role {
+  id         String       @id @default(uuid())
+  name       String
+  User       User[]
+  Permission Permission[]
 }
 
-model CaslAbility {
-  id           Int                @id @default(autoincrement())
-  role         Role?
-  action       CaslAction
-  type         CaslPermissionType
-  modelName    CaslModels
-  sharedWith   User?              @relation(fields: [sharedWithId], references: [id])
+model Permission {
+  id           Int              @id @default(autoincrement())
+  role         Role?            @relation(fields: [roleId], references: [id])
+  action       PermissionAction
+  type         PermissionType
+  modelName    String
+  sharedWith   User?            @relation(fields: [sharedWithId], references: [id])
   sharedWithId Int?
   resourceId   Int?
+  roleId       String?
 }
 
-enum CaslPermissionType {
+enum PermissionType {
   can
   cannot
 }
 
-enum CaslAction {
+enum PermissionAction {
   read
   create
   update
@@ -163,7 +164,7 @@ model DataSource {
 model TournamentDataSource {
   id         String     @id
   dataSource DataSource @relation(fields: [id], references: [id])
-
+ 
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
 
@@ -259,15 +260,6 @@ enum ActionParamType {
   DATE
 
   JSON
-}
-
-enum CaslModels {
-  all
-  User
-  Widget
-  Schema
-  Component
-  CaslAbility
 }
 
 generator client {
