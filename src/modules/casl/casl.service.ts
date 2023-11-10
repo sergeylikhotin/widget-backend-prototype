@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PermissionDto } from './casl.dto';
-import { PaginationDto } from 'src/common/dto';
+import { CursorPaginationDto, PaginationDto } from 'src/common/dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { Permission, User } from '@prisma/client';
@@ -17,16 +17,17 @@ export class CaslService {
     private readonly prisma: PrismaService
   ) {}
 
-  async getPermissions({ skip, take }: PaginationDto) {
+  async getPermissions({ take, cursor }: CursorPaginationDto) {
     const cachedPerms = await this.cacheManager.get<Permission[]>(
       this.cacheKey
     );
 
     if (!cachedPerms) {
       console.log('Render times', ++count);
+      const cursorArgs: any = cursor ? { skip: 1, cursor: { id: cursor } } : {};
       const permissions = await this.prisma.permission.findMany({
-        skip,
-        take
+        take,
+        ...cursorArgs
       });
 
       await this.cacheManager.set(this.cacheKey, permissions);
@@ -77,7 +78,7 @@ export class CaslService {
     await this.cacheManager.del(cacheKey);
   }
 
-  async updatePermission(id: number, dto: PermissionDto, user: User) {
+  async updatePermission(id: string, dto: PermissionDto, user: User) {
     const cacheKey = `${this.cacheKey}:${user.id}`;
     await this.prisma.permission.update({
       where: { id },
@@ -87,7 +88,7 @@ export class CaslService {
     await this.cacheManager.del(cacheKey);
   }
 
-  async removePermission(id: number, user: User) {
+  async removePermission(id: string, user: User) {
     const cacheKey = `${this.cacheKey}:${user.id}`;
     await this.prisma.permission.delete({ where: { id } });
     await this.cacheManager.del(this.cacheKey);

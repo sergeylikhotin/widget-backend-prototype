@@ -5,7 +5,7 @@ import {
   Get,
   HttpStatus,
   Param,
-  ParseIntPipe,
+  ParseIntPipe, ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -17,7 +17,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import { MessageResponse, PaginationDto } from 'src/common/dto';
+import { CursorPaginationDto, MessageResponse, PaginationDto } from 'src/common/dto';
 import { PermissionDto } from './casl.dto';
 import { CaslService } from './casl.service';
 import { GuardedRequest } from 'src/common/types/shared';
@@ -43,7 +43,7 @@ export class CaslController {
   @ApiBearerAuth()
   @UseGuards(AccessTokenGuard)
   @Get('permission')
-  async getPermissions(@Query() query: PaginationDto, @Res() res: Response) {
+  async getPermissions(@Query() query: CursorPaginationDto, @Res() res: Response) {
     const permissions = await this.caslService.getPermissions(query);
 
     res.status(HttpStatus.OK).json(permissions);
@@ -69,7 +69,7 @@ export class CaslController {
   async updatePermission(
     @Res() res: Response,
     @Body() body: PermissionDto,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() req: GuardedRequest
   ) {
     await this.caslService.updatePermission(id, body, req.user);
@@ -83,7 +83,7 @@ export class CaslController {
   @Delete('permission/:id')
   async removePermission(
     @Res() res: Response,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id: string,
     @Req() req: GuardedRequest
   ) {
     await this.caslService.removePermission(id, req.user);

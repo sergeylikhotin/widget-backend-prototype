@@ -1,31 +1,39 @@
 model User {
-  id                       Int          @id @default(autoincrement())
-  email                    String       @unique
-  password                 String?
-  role                     Role         @relation(fields: [roleId], references: [id])
-  caslAbility              Permission[]
-  activationCode           String?      @unique
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  password String?
+
+  activationCode           String?   @unique
   activationCodeExpiration DateTime?
-  roleId                   String
+
+  permissions Permission[]
+
+  roleId String?
+  role   Role?   @relation(fields: [roleId], references: [id])
 }
 
 model Role {
-  id         String       @id @default(uuid())
-  name       String
-  User       User[]
-  Permission Permission[]
+  id   String @id @default(uuid())
+  name String
+
+  users       User[]
+  permissions Permission[]
 }
 
 model Permission {
-  id           Int              @id @default(autoincrement())
-  role         Role?            @relation(fields: [roleId], references: [id])
-  action       PermissionAction
-  type         PermissionType
-  modelName    String
-  sharedWith   User?            @relation(fields: [sharedWithId], references: [id])
+  id String @id @default(uuid())
+
+  action    PermissionAction
+  type      PermissionType
+  modelName String
+
   sharedWithId Int?
-  resourceId   Int?
-  roleId       String?
+  sharedWith   User? @relation(fields: [sharedWithId], references: [id])
+
+  resourceId Int?
+
+  roleId String?
+  role   Role?   @relation(fields: [roleId], references: [id])
 }
 
 enum PermissionType {
@@ -164,7 +172,7 @@ model DataSource {
 model TournamentDataSource {
   id         String     @id
   dataSource DataSource @relation(fields: [id], references: [id])
- 
+
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id])
 

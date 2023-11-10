@@ -2,7 +2,7 @@ import { Permission, Role } from '@prisma/client';
 
 export const caslSeed: Permission[] = [
   {
-    id: 1,
+    id: 'f8c3329a-4a9a-4e46-aa24-4ac8532e250d',
     modelName: 'Widget',
     action: 'manage',
     roleId: '0c9a2d21-038f-40b4-9b68-4d4232fb9beb',
@@ -11,7 +11,7 @@ export const caslSeed: Permission[] = [
     sharedWithId: null
   },
   {
-    id: 2,
+    id: '2e655e85-563a-456b-b7ea-7e2857f5e718',
     modelName: 'all',
     action: 'manage',
     roleId: 'c34ede0c-e6dc-49fb-ab4a-4c56501a1d96',

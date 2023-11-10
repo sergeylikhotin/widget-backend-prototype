@@ -16,10 +16,10 @@ import {
 } from 'src/common/guards/policies.guard';
 import { Response } from 'express';
 import { WidgetService } from './widget.service';
-import { PaginationDto } from 'src/common/dto';
+import { CursorPaginationDto, PaginationDto } from 'src/common/dto';
 
 @ApiTags('widget')
-@Controller('widget')
+@Controller('widgets')
 export class WidgetController {
   constructor(private readonly widgetService: WidgetService) {}
 
@@ -27,16 +27,11 @@ export class WidgetController {
   @CheckPolicies(new CaslPolicyHandler('read', 'Widget'))
   @UseGuards(AccessTokenGuard, PoliciesGuard)
   @Get()
-  async get(@Res() res: Response, @Query() query: PaginationDto) {
-    const widgets = await this.widgetService.getWidgets(query);
+  async getMany(@Res() res: Response, @Query() query: CursorPaginationDto) {
+    const widgets = await this.widgetService.getMany(query);
 
     res.status(HttpStatus.OK).json(widgets);
   }
-
-  /*@Get()
-  async getMany() {
-    return this.widgetService.getMany();
-  }*/
 
   @Get(':widgetId')
   async getOne(@Param('widgetId') widgetId: string) {
