@@ -2,7 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { $Enums, Permission } from '@prisma/client';
 import { IsEnum, IsInt, IsPositive, IsString, IsUUID } from 'class-validator';
 
-export class PermissionDto implements Omit<Permission, 'id' | 'role'> {
+export class PermissionDto implements Omit<Permission, 'role'> {
+  @IsInt()
+  @IsPositive()
+  id: number;
   @ApiProperty({
     description: 'The id of the target user'
   })
@@ -41,4 +44,8 @@ export class PermissionDto implements Omit<Permission, 'id' | 'role'> {
   })
   @IsString()
   modelName: string;
+}
+
+export class AddPermissionEvent {
+  constructor(public readonly perm: Permission) {}
 }

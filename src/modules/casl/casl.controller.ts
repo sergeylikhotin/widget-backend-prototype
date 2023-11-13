@@ -43,8 +43,8 @@ export class CaslController {
   @ApiBearerAuth()
   @UseGuards(AccessTokenGuard)
   @Get('permission')
-  async getPermissions(@Query() query: PaginationDto, @Res() res: Response) {
-    const permissions = await this.caslService.getPermissions(query);
+  async getPermissions(@Res() res: Response) {
+    const permissions = await this.caslService.getPermissions();
 
     res.status(HttpStatus.OK).json(permissions);
   }
@@ -69,10 +69,9 @@ export class CaslController {
   async updatePermission(
     @Res() res: Response,
     @Body() body: PermissionDto,
-    @Param('id', ParseIntPipe) id: number,
-    @Req() req: GuardedRequest
+    @Param('id', ParseIntPipe) id: number
   ) {
-    await this.caslService.updatePermission(id, body, req.user);
+    await this.caslService.updatePermission(id, body);
 
     res.status(HttpStatus.OK).json(new MessageResponse('Success'));
   }
@@ -83,10 +82,9 @@ export class CaslController {
   @Delete('permission/:id')
   async removePermission(
     @Res() res: Response,
-    @Param('id', ParseIntPipe) id: number,
-    @Req() req: GuardedRequest
+    @Param('id', ParseIntPipe) id: number
   ) {
-    await this.caslService.removePermission(id, req.user);
+    await this.caslService.removePermission(id);
 
     res.status(HttpStatus.OK).json(new MessageResponse('Success'));
   }

@@ -14,6 +14,7 @@ export class CaslSeed implements SeedInterface, OnModuleInit {
 
   async onModuleInit() {
     try {
+      // await this._prisma.role.ups
       await this._prisma.$transaction(async (prisma) => {
         await this.plant(prisma);
       });

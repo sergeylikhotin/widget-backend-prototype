@@ -17,6 +17,7 @@ import { EmailModule } from './modules/email/email.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { SchemaModule } from './modules/schema/schema.module';
 import { WidgetModule } from './modules/widget/widget.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -24,11 +25,12 @@ import { WidgetModule } from './modules/widget/widget.module';
       load: [appConfig, cookieConfig, jwtConfig, emailConfig, clientConfig],
       isGlobal: true
     }),
+    EventEmitterModule.forRoot({ global: true }),
     CacheModule.register({ isGlobal: true }),
 
     PrismaModule,
-    AuthModule,
     CaslModule,
+    AuthModule,
     WidgetModule,
     EmailModule,
 

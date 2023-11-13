@@ -1,33 +1,41 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  OnModuleInit
+} from '@nestjs/common';
+import { Permission, User } from '@prisma/client';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { PermissionDto } from './casl.dto';
-import { PaginationDto } from 'src/common/dto';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
-import { Permission, User } from '@prisma/client';
-
-let count = 0;
 
 @Injectable()
-export class CaslService {
+export class CaslService implements OnModuleInit {
   private readonly cacheKey = 'permission';
-  private readonly lock = false;
+
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly prisma: PrismaService
   ) {}
 
-  async getPermissions({ skip, take }: PaginationDto) {
+  async onModuleInit() {
+    const permissions = await this.prisma.permission.findMany();
+
+    await this.cacheManager.set(this.cacheKey, permissions);
+  }
+
+  async getPermissions() {
+    return this.getCachedPermissions();
+  }
+
+  private async getCachedPermissions() {
     const cachedPerms = await this.cacheManager.get<Permission[]>(
       this.cacheKey
     );
 
     if (!cachedPerms) {
-      console.log('Render times', ++count);
-      const permissions = await this.prisma.permission.findMany({
-        skip,
-        take
-      });
+      const permissions = await this.prisma.permission.findMany();
 
       await this.cacheManager.set(this.cacheKey, permissions);
       return permissions;
@@ -37,23 +45,14 @@ export class CaslService {
   }
 
   async getPermissionsForUser(user: User) {
-    const cacheKey = `${this.cacheKey}:${user.id}`;
-    const cachedPerms = await this.cacheManager.get<Permission[]>(cacheKey);
+    const cachedPerms = await this.getCachedPermissions();
 
-    if (!cachedPerms) {
-      const permissions = await this.prisma.permission.findMany({
-        where: { OR: [{ roleId: user.roleId }, { sharedWithId: user.id }] }
-      });
-
-      await this.cacheManager.set(cacheKey, permissions);
-      return permissions;
-    }
-
-    return cachedPerms;
+    return cachedPerms.filter(
+      (perm) => perm.sharedWithId === user.id || perm.roleId === user.roleId
+    );
   }
 
   async addPermission(dto: PermissionDto, user: User) {
-    const cacheKey = `${this.cacheKey}:${user.id}`;
     const allowedCondition =
       (dto.resourceId && !dto.sharedWithId) ||
       (!dto.resourceId && dto.sharedWithId);
@@ -74,23 +73,19 @@ export class CaslService {
 
     await this.prisma.permission.create({ data: dto });
     await this.cacheManager.del(this.cacheKey);
-    await this.cacheManager.del(cacheKey);
   }
 
-  async updatePermission(id: number, dto: PermissionDto, user: User) {
-    const cacheKey = `${this.cacheKey}:${user.id}`;
+  async updatePermission(id: number, dto: PermissionDto) {
     await this.prisma.permission.update({
       where: { id },
       data: dto
     });
+
     await this.cacheManager.del(this.cacheKey);
-    await this.cacheManager.del(cacheKey);
   }
 
-  async removePermission(id: number, user: User) {
-    const cacheKey = `${this.cacheKey}:${user.id}`;
+  async removePermission(id: number) {
     await this.prisma.permission.delete({ where: { id } });
     await this.cacheManager.del(this.cacheKey);
-    await this.cacheManager.del(cacheKey);
   }
 }
