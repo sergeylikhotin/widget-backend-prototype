@@ -52,12 +52,8 @@ export class CaslController {
   @ApiBearerAuth()
   @UseGuards(AccessTokenGuard)
   @Post('permission')
-  async addPermission(
-    @Res() res: Response,
-    @Body() body: PermissionDto,
-    @Req() req: GuardedRequest
-  ) {
-    await this.caslService.addPermission(body, req.user);
+  async addPermission(@Res() res: Response, @Body() body: PermissionDto) {
+    await this.caslService.addPermission(body);
 
     res.status(HttpStatus.OK).json(new MessageResponse('Success'));
   }

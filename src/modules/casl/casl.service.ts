@@ -8,7 +8,8 @@ import {
 import { Permission, User } from '@prisma/client';
 import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
-import { PermissionDto } from './casl.dto';
+import { PermissionDto, RefreshPermissionCacheEvent } from './casl.dto';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class CaslService implements OnModuleInit {
@@ -16,7 +17,8 @@ export class CaslService implements OnModuleInit {
 
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   async onModuleInit() {
@@ -52,7 +54,7 @@ export class CaslService implements OnModuleInit {
     );
   }
 
-  async addPermission(dto: PermissionDto, user: User) {
+  async addPermission(dto: PermissionDto) {
     const allowedCondition =
       (dto.resourceId && !dto.sharedWithId) ||
       (!dto.resourceId && dto.sharedWithId);
@@ -71,8 +73,14 @@ export class CaslService implements OnModuleInit {
       throw new BadRequestException('Permission already exist!');
     }
 
-    await this.prisma.permission.create({ data: dto });
-    await this.cacheManager.del(this.cacheKey);
+    await this.prisma.permission.create({
+      data: dto
+    });
+
+    this.eventEmitter.emit(
+      'permission.refresh',
+      new RefreshPermissionCacheEvent()
+    );
   }
 
   async updatePermission(id: number, dto: PermissionDto) {
@@ -81,11 +89,25 @@ export class CaslService implements OnModuleInit {
       data: dto
     });
 
-    await this.cacheManager.del(this.cacheKey);
+    this.eventEmitter.emit(
+      'permission.refresh',
+      new RefreshPermissionCacheEvent()
+    );
   }
 
   async removePermission(id: number) {
     await this.prisma.permission.delete({ where: { id } });
-    await this.cacheManager.del(this.cacheKey);
+
+    this.eventEmitter.emit(
+      'permission.refresh',
+      new RefreshPermissionCacheEvent()
+    );
+  }
+
+  @OnEvent('permission.refresh', { async: true })
+  private async refreshCacheEvent() {
+    const permissions = await this.prisma.permission.findMany();
+
+    await this.cacheManager.set(this.cacheKey, permissions);
   }
 }

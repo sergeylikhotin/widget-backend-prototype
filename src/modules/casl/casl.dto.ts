@@ -46,6 +46,6 @@ export class PermissionDto implements Omit<Permission, 'role'> {
   modelName: string;
 }
 
-export class AddPermissionEvent {
-  constructor(public readonly perm: Permission) {}
+export class RefreshPermissionCacheEvent {
+  constructor() {}
 }
