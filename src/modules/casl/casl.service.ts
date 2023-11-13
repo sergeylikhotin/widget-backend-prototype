@@ -28,7 +28,7 @@ export class CaslService implements OnModuleInit {
   }
 
   async getPermissions() {
-    return this.getCachedPermissions();
+    return await this.getCachedPermissions();
   }
 
   private async getCachedPermissions() {
